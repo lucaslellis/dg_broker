@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="pt-BR" xml:lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Lucas Pimentel Lellis" />
+  <title>Data Guard Broker - Configuração e Operações de Rotina</title>
+  <style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+background-color: #ffffff;
+color: #a0a0a0;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #a0a0a0; padding-left: 4px; }
+div.sourceCode
+{ color: #1f1c1b; background-color: #ffffff; }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span { color: #1f1c1b; } 
+code span.al { color: #bf0303; background-color: #f7e6e6; font-weight: bold; } 
+code span.an { color: #ca60ca; } 
+code span.at { color: #0057ae; } 
+code span.bn { color: #b08000; } 
+code span.bu { color: #644a9b; font-weight: bold; } 
+code span.cf { color: #1f1c1b; font-weight: bold; } 
+code span.ch { color: #924c9d; } 
+code span.cn { color: #aa5500; } 
+code span.co { color: #898887; } 
+code span.cv { color: #0095ff; } 
+code span.do { color: #607880; } 
+code span.dt { color: #0057ae; } 
+code span.dv { color: #b08000; } 
+code span.er { color: #bf0303; text-decoration: underline; } 
+code span.ex { color: #0095ff; font-weight: bold; } 
+code span.fl { color: #b08000; } 
+code span.fu { color: #644a9b; } 
+code span.im { color: #ff5500; } 
+code span.in { color: #b08000; } 
+code span.kw { color: #1f1c1b; font-weight: bold; } 
+code span.op { color: #1f1c1b; } 
+code span.ot { color: #006e28; } 
+code span.pp { color: #006e28; } 
+code span.re { color: #0057ae; background-color: #e0e9f8; } 
+code span.sc { color: #3daee9; } 
+code span.ss { color: #ff5500; } 
+code span.st { color: #bf0303; } 
+code span.va { color: #0057ae; } 
+code span.vs { color: #bf0303; } 
+code span.wa { color: #bf0303; } 
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">img {
+border: 1px solid #000;
+max-width: 100%;
+height: auto;
+}
+body {
+font-family: Helvetica, arial, sans-serif;
+font-size: 14px;
+line-height: 1.6;
+padding-top: 10px;
+padding-bottom: 10px;
+background-color: white;
+padding: 30px;
+color: #333;
+}
+body>*:first-child {
+margin-top: 0 !important;
+}
+body>*:last-child {
+margin-bottom: 0 !important;
+}
+a {
+color: #4183C4;
+text-decoration: none;
+}
+a.absent {
+color: #cc0000;
+}
+a.anchor {
+display: block;
+padding-left: 30px;
+margin-left: -30px;
+cursor: pointer;
+position: absolute;
+top: 0;
+left: 0;
+bottom: 0;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+margin: 20px 0 10px;
+padding: 0;
+font-weight: bold;
+-webkit-font-smoothing: antialiased;
+cursor: text;
+position: relative;
+}
+h2:first-child,
+h1:first-child,
+h1:first-child+h2,
+h3:first-child,
+h4:first-child,
+h5:first-child,
+h6:first-child {
+margin-top: 0;
+padding-top: 0;
+}
+h1:hover a.anchor,
+h2:hover a.anchor,
+h3:hover a.anchor,
+h4:hover a.anchor,
+h5:hover a.anchor,
+h6:hover a.anchor {
+text-decoration: none;
+}
+h1 tt,
+h1 code {
+font-size: inherit;
+}
+h2 tt,
+h2 code {
+font-size: inherit;
+}
+h3 tt,
+h3 code {
+font-size: inherit;
+}
+h4 tt,
+h4 code {
+font-size: inherit;
+}
+h5 tt,
+h5 code {
+font-size: inherit;
+}
+h6 tt,
+h6 code {
+font-size: inherit;
+}
+h1 {
+font-size: 24px;
+border-bottom: 1px solid #cccccc;
+color: black;
+}
+h2 {
+font-size: 18px;
+color: black;
+}
+h3 {
+font-size: 16px;
+}
+h4 {
+font-size: 14px;
+}
+h5 {
+font-size: 12px;
+}
+h6 {
+color: #777777;
+font-size: 11px;
+}
+hr {
+border: 0 none;
+color: #cccccc;
+height: 4px;
+padding: 0;
+}
+body>h2:first-child {
+margin-top: 0;
+padding-top: 0;
+}
+body>h1:first-child {
+margin-top: 0;
+padding-top: 0;
+}
+body>h1:first-child+h2 {
+margin-top: 0;
+padding-top: 0;
+}
+body>h3:first-child,
+body>h4:first-child,
+body>h5:first-child,
+body>h6:first-child {
+margin-top: 0;
+padding-top: 0;
+}
+a:first-child h1,
+a:first-child h2,
+a:first-child h3,
+a:first-child h4,
+a:first-child h5,
+a:first-child h6 {
+margin-top: 0;
+padding-top: 0;
+}
+h1 p,
+h2 p,
+h3 p,
+h4 p,
+h5 p,
+h6 p {
+margin-top: 0;
+}
+blockquote {
+border-left: 4px solid #dddddd;
+padding: 0 15px;
+color: #777777;
+}
+blockquote> :first-child {
+margin-top: 0;
+}
+blockquote> :last-child {
+margin-bottom: 0;
+}
+table {
+padding: 0;
+}
+table tr {
+border-top: 1px solid #cccccc;
+background-color: white;
+margin: 0;
+padding: 0;
+}
+table tr:nth-child(2n) {
+background-color: #f8f8f8;
+}
+table tr th {
+font-weight: bold;
+border: 1px solid #cccccc;
+text-align: left;
+margin: 0;
+padding: 6px 13px;
+}
+table tr td {
+border: 1px solid #cccccc;
+text-align: left;
+margin: 0;
+padding: 6px 13px;
+}
+table tr th :first-child,
+table tr td :first-child {
+margin-top: 0;
+}
+table tr th :last-child,
+table tr td :last-child {
+margin-bottom: 0;
+}
+div.sourceCode {
+border: 2px solid #ddd;
+}
+table {
+margin: 15px 0;
+}
+table {
+padding: 0;
+}
+table tr {
+border-top: 1px solid #cccccc;
+background-color: white;
+margin: 0;
+padding: 0;
+}
+table tr:nth-child(2n) {
+background-color: #f8f8f8;
+}
+table tr th {
+font-weight: bold;
+border: 1px solid #cccccc;
+text-align: left;
+margin: 0;
+padding: 6px 13px;
+}
+table tr td {
+border: 1px solid #cccccc;
+text-align: left;
+margin: 0;
+padding: 6px 13px;
+}
+table tr th :first-child,
+table tr td :first-child {
+margin-top: 0;
+}
+table tr th :last-child,
+table tr td :last-child {
+margin-bottom: 0;
+}
+figcaption {
+font-family: Helvetica, arial, sans-serif;
+font-size: 10pt;
+color: #333;
+}
+body code:not(.sourceCode) {
+background-color: #cccccc;
+color: #000;
+font-weight: bold;
+padding: 0pt 2pt 0pt 2pt;
+}</style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Data Guard Broker - Configuração e Operações de
+Rotina</h1>
+<p class="author">Lucas Pimentel Lellis</p>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#ambiente" id="toc-ambiente"><span class="toc-section-number">1</span> Ambiente</a></li>
+<li><a href="#pré-requisitos" id="toc-pré-requisitos"><span class="toc-section-number">2</span> Pré-Requisitos</a>
+<ul>
+<li><a href="#primary" id="toc-primary"><span class="toc-section-number">2.1</span> Primary</a>
+<ul>
+<li><a href="#listener---entradas-estáticas" id="toc-listener---entradas-estáticas"><span class="toc-section-number">2.1.1</span> Listener - Entradas
+estáticas</a></li>
+<li><a href="#tnsnames" id="toc-tnsnames"><span class="toc-section-number">2.1.2</span> Tnsnames</a></li>
+<li><a href="#criar-standby-redo-logs---número-de-redo-log-groups-1" id="toc-criar-standby-redo-logs---número-de-redo-log-groups-1"><span class="toc-section-number">2.1.3</span> Criar standby redo logs - Número
+de redo log groups + 1</a></li>
+<li><a href="#colocar-banco-em-flashback---opcional" id="toc-colocar-banco-em-flashback---opcional"><span class="toc-section-number">2.1.4</span> Colocar banco em flashback -
+Opcional</a></li>
+</ul></li>
+<li><a href="#standby" id="toc-standby"><span class="toc-section-number">2.2</span> Standby</a>
+<ul>
+<li><a href="#listener---entradas-estáticas-1" id="toc-listener---entradas-estáticas-1"><span class="toc-section-number">2.2.1</span> Listener - Entradas
+estáticas</a></li>
+<li><a href="#tnsnames-1" id="toc-tnsnames-1"><span class="toc-section-number">2.2.2</span> Tnsnames</a></li>
+<li><a href="#oratab" id="toc-oratab"><span class="toc-section-number">2.2.3</span> Oratab</a></li>
+<li><a href="#pfile-inicial" id="toc-pfile-inicial"><span class="toc-section-number">2.2.4</span> Pfile inicial</a></li>
+<li><a href="#criar-diretórios" id="toc-criar-diretórios"><span class="toc-section-number">2.2.5</span> Criar diretórios</a></li>
+<li><a href="#copiar-password-file-da-primary" id="toc-copiar-password-file-da-primary"><span class="toc-section-number">2.2.6</span> Copiar password file da
+primary</a></li>
+<li><a href="#startup-nomount" id="toc-startup-nomount"><span class="toc-section-number">2.2.7</span> Startup Nomount</a></li>
+<li><a href="#executar-duplicate" id="toc-executar-duplicate"><span class="toc-section-number">2.2.8</span> Executar Duplicate</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#configuração-do-broker" id="toc-configuração-do-broker"><span class="toc-section-number">3</span> Configuração do Broker</a>
+<ul>
+<li><a href="#ativar-o-dmon-processo-do-dg-broker---primary-e-standby" id="toc-ativar-o-dmon-processo-do-dg-broker---primary-e-standby"><span class="toc-section-number">3.1</span> Ativar o DMON (Processo do DG
+Broker) - Primary e Standby</a></li>
+<li><a href="#configurar-o-data-guard-via-broker---primary" id="toc-configurar-o-data-guard-via-broker---primary"><span class="toc-section-number">3.2</span> Configurar o Data Guard via Broker
+- Primary</a></li>
+<li><a href="#iniciar-a-replicação---primary" id="toc-iniciar-a-replicação---primary"><span class="toc-section-number">3.3</span> Iniciar a Replicação -
+Primary</a></li>
+<li><a href="#validar-o-data-guard" id="toc-validar-o-data-guard"><span class="toc-section-number">3.4</span> Validar o Data Guard</a></li>
+<li><a href="#configurações-do-rman---standby" id="toc-configurações-do-rman---standby"><span class="toc-section-number">3.5</span> Configurações do RMAN -
+Standby</a></li>
+<li><a href="#configurações-do-rman---primary" id="toc-configurações-do-rman---primary"><span class="toc-section-number">3.6</span> Configurações do RMAN -
+Primary</a></li>
+</ul></li>
+<li><a href="#operações-de-rotina" id="toc-operações-de-rotina"><span class="toc-section-number">4</span> Operações de Rotina</a>
+<ul>
+<li><a href="#validar-se-o-broker-está-sendo-usado" id="toc-validar-se-o-broker-está-sendo-usado"><span class="toc-section-number">4.1</span> Validar se o Broker está sendo
+usado</a></li>
+<li><a href="#abrir-o-dgmgrl" id="toc-abrir-o-dgmgrl"><span class="toc-section-number">4.2</span> Abrir o DGMGRL</a></li>
+<li><a href="#validação-básica" id="toc-validação-básica"><span class="toc-section-number">4.3</span> Validação Básica</a></li>
+<li><a href="#interromper-redo-apply" id="toc-interromper-redo-apply"><span class="toc-section-number">4.4</span> Interromper Redo Apply</a></li>
+<li><a href="#reiniciar-redo-apply" id="toc-reiniciar-redo-apply"><span class="toc-section-number">4.5</span> Reiniciar Redo Apply</a></li>
+<li><a href="#interromper-envio-de-archives" id="toc-interromper-envio-de-archives"><span class="toc-section-number">4.6</span> Interromper Envio de
+Archives</a></li>
+<li><a href="#reiniciar-envio-de-archives" id="toc-reiniciar-envio-de-archives"><span class="toc-section-number">4.7</span> Reiniciar Envio de
+Archives</a></li>
+</ul></li>
+<li><a href="#referências" id="toc-referências">Referências</a></li>
+</ul>
+</nav>
+<h1 data-number="1" id="ambiente"><span class="header-section-number">1</span> Ambiente</h1>
+<table>
+<thead>
+<tr class="header">
+<th>Informação</th>
+<th>Primary</th>
+<th>Standby</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>db_name</td>
+<td>CDB001</td>
+<td>CDB001</td>
+</tr>
+<tr class="even">
+<td>db_unique_name</td>
+<td>CDB001</td>
+<td>CDB001_dg</td>
+</tr>
+<tr class="odd">
+<td>db_domain</td>
+<td>world</td>
+<td>world</td>
+</tr>
+<tr class="even">
+<td>Listener</td>
+<td>LISTENER</td>
+<td>LISTENER</td>
+</tr>
+<tr class="odd">
+<td>Hostname</td>
+<td>linux01</td>
+<td>linux02</td>
+</tr>
+<tr class="even">
+<td>Versão</td>
+<td>19.15</td>
+<td>19.15</td>
+</tr>
+</tbody>
+</table>
+<h1 data-number="2" id="pré-requisitos"><span class="header-section-number">2</span> Pré-Requisitos</h1>
+<h2 data-number="2.1" id="primary"><span class="header-section-number">2.1</span> Primary</h2>
+<h3 data-number="2.1.1" id="listener---entradas-estáticas"><span class="header-section-number">2.1.1</span> Listener - Entradas
+estáticas</h3>
+<p>Incluir no arquivo
+<code>$ORACLE_HOME/network/admin/listener.ora</code>:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb1-1"><a href="#cb1-1"></a>SID_LIST_LISTENER=</span>
+<span id="cb1-2"><a href="#cb1-2"></a>      (</span>
+<span id="cb1-3"><a href="#cb1-3"></a>        SID_LIST=</span>
+<span id="cb1-4"><a href="#cb1-4"></a>          (</span>
+<span id="cb1-5"><a href="#cb1-5"></a>            SID_DESC=</span>
+<span id="cb1-6"><a href="#cb1-6"></a>              (SID_NAME=cdb001)</span>
+<span id="cb1-7"><a href="#cb1-7"></a>              (GLOBAL_DBNAME=cdb001_DGMGRL.world)</span>
+<span id="cb1-8"><a href="#cb1-8"></a>              (ORACLE_HOME=/u01/app/oracle/product/19.0.0/db_1)</span>
+<span id="cb1-9"><a href="#cb1-9"></a>              (ENVS=&quot;TNS_ADMIN=/u01/app/oracle/product/19.0.0/db_1/network/admin&quot;)</span>
+<span id="cb1-10"><a href="#cb1-10"></a>          )</span>
+<span id="cb1-11"><a href="#cb1-11"></a>          (</span>
+<span id="cb1-12"><a href="#cb1-12"></a>            SID_DESC=</span>
+<span id="cb1-13"><a href="#cb1-13"></a>              (SID_NAME=cdb001)</span>
+<span id="cb1-14"><a href="#cb1-14"></a>              (GLOBAL_DBNAME=cdb001.world)</span>
+<span id="cb1-15"><a href="#cb1-15"></a>              (ORACLE_HOME=/u01/app/oracle/product/19.0.0/db_1)</span>
+<span id="cb1-16"><a href="#cb1-16"></a>              (ENVS=&quot;TNS_ADMIN=/u01/app/oracle/product/19.0.0/db_1/network/admin&quot;)</span>
+<span id="cb1-17"><a href="#cb1-17"></a>          )</span>
+<span id="cb1-18"><a href="#cb1-18"></a>      )</span></code></pre></div>
+<p>Execute um stop/start do listener:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode numberSource bash numberLines"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1"></a><span class="ex">lsnrctl</span> stop LISTENER <span class="kw">&amp;&amp;</span> <span class="ex">lsnrctl</span> start LISTENER</span>
+<span id="cb2-2"><a href="#cb2-2"></a></span>
+<span id="cb2-3"><a href="#cb2-3"></a><span class="ex">sqlplus</span> / as sysdba <span class="op">&lt;&lt;EOF</span></span>
+<span id="cb2-4"><a href="#cb2-4"></a><span class="st">alter system register;</span></span>
+<span id="cb2-5"><a href="#cb2-5"></a><span class="st">exit</span></span>
+<span id="cb2-6"><a href="#cb2-6"></a><span class="op">EOF</span></span></code></pre></div>
+<p>Verifique que os serviços estáticos estão disponíveis:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode numberSource bash numberLines"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1"></a><span class="ex">[oracle@linux01</span> cdb001 ~]$ lsnrctl status</span>
+<span id="cb3-2"><a href="#cb3-2"></a></span>
+<span id="cb3-3"><a href="#cb3-3"></a><span class="ex">LSNRCTL</span> for Linux: Version 19.0.0.0.0 <span class="at">-</span> Production on 30-DEC-2022 21:00:17</span>
+<span id="cb3-4"><a href="#cb3-4"></a></span>
+<span id="cb3-5"><a href="#cb3-5"></a><span class="ex">Copyright</span> <span class="er">(</span><span class="ex">c</span><span class="kw">)</span> <span class="ex">1991,</span> 2022, Oracle.  All rights reserved.</span>
+<span id="cb3-6"><a href="#cb3-6"></a></span>
+<span id="cb3-7"><a href="#cb3-7"></a><span class="ex">Connecting</span> to <span class="er">(</span><span class="va">DESCRIPTION</span><span class="op">=</span><span class="va">(</span>ADDRESS=<span class="er">(</span>PROTOCOL=TCP<span class="va">)</span><span class="kw">(</span><span class="va">HOST</span><span class="op">=</span>linux01.gcp.goldopet.win<span class="kw">)(</span><span class="va">PORT</span><span class="op">=</span>1521<span class="kw">))</span><span class="er">)</span></span>
+<span id="cb3-8"><a href="#cb3-8"></a><span class="ex">STATUS</span> of the LISTENER</span>
+<span id="cb3-9"><a href="#cb3-9"></a><span class="ex">------------------------</span></span>
+<span id="cb3-10"><a href="#cb3-10"></a><span class="ex">Alias</span>                     listener</span>
+<span id="cb3-11"><a href="#cb3-11"></a><span class="ex">Version</span>                   TNSLSNR for Linux: Version 19.0.0.0.0 <span class="at">-</span> Production</span>
+<span id="cb3-12"><a href="#cb3-12"></a><span class="ex">Start</span> Date                30-DEC-2022 20:59:17</span>
+<span id="cb3-13"><a href="#cb3-13"></a><span class="ex">Uptime</span>                    0 days 0 hr. 1 min. 0 sec</span>
+<span id="cb3-14"><a href="#cb3-14"></a><span class="ex">Trace</span> Level               off</span>
+<span id="cb3-15"><a href="#cb3-15"></a><span class="ex">Security</span>                  ON: Local OS Authentication</span>
+<span id="cb3-16"><a href="#cb3-16"></a><span class="ex">SNMP</span>                      OFF</span>
+<span id="cb3-17"><a href="#cb3-17"></a><span class="ex">Listener</span> Parameter File   /u01/app/oracle/product/19.0.0/db_1/network/admin/listener.ora</span>
+<span id="cb3-18"><a href="#cb3-18"></a><span class="ex">Listener</span> Log File         /u01/app/oracle/diag/tnslsnr/linux01/listener/alert/log.xml</span>
+<span id="cb3-19"><a href="#cb3-19"></a><span class="ex">Listening</span> Endpoints Summary...</span>
+<span id="cb3-20"><a href="#cb3-20"></a>  <span class="kw">(</span><span class="va">DESCRIPTION</span><span class="op">=</span><span class="va">(</span>ADDRESS=<span class="er">(</span>PROTOCOL=tcp<span class="va">)</span><span class="kw">(</span><span class="va">HOST</span><span class="op">=</span>linux01.gcp.goldopet.win<span class="kw">)(</span><span class="va">PORT</span><span class="op">=</span>1521<span class="kw">))</span><span class="er">)</span></span>
+<span id="cb3-21"><a href="#cb3-21"></a>  <span class="kw">(</span><span class="va">DESCRIPTION</span><span class="op">=</span><span class="va">(</span>ADDRESS=<span class="er">(</span>PROTOCOL=ipc<span class="va">)</span><span class="kw">(</span><span class="va">KEY</span><span class="op">=</span>EXTPROC1521<span class="kw">))</span><span class="er">)</span></span>
+<span id="cb3-22"><a href="#cb3-22"></a><span class="ex">Services</span> Summary...</span>
+<span id="cb3-23"><a href="#cb3-23"></a><span class="ex">Service</span> <span class="st">&quot;cdb001.world&quot;</span> has 2 instance<span class="er">(</span><span class="ex">s</span><span class="kw">)</span><span class="bu">.</span></span>
+<span id="cb3-24"><a href="#cb3-24"></a>  <span class="ex">Instance</span> <span class="st">&quot;cdb001&quot;</span>, status UNKNOWN, has 1 handler<span class="er">(</span><span class="ex">s</span><span class="kw">)</span> <span class="cf">for</span> this <span class="ex">service...</span>       <span class="op">&lt;&lt;&lt;</span> SERVIÇO ESTÁTICO</span>
+<span id="cb3-25"><a href="#cb3-25"></a>  <span class="ex">Instance</span> <span class="st">&quot;cdb001&quot;</span>, status READY, has 1 handler<span class="er">(</span><span class="ex">s</span><span class="kw">)</span> <span class="cf">for</span> this <span class="ex">service...</span></span>
+<span id="cb3-26"><a href="#cb3-26"></a><span class="ex">Service</span> <span class="st">&quot;cdb001XDB.world&quot;</span> has 1 instance<span class="er">(</span><span class="ex">s</span><span class="kw">)</span><span class="bu">.</span></span>
+<span id="cb3-27"><a href="#cb3-27"></a>  <span class="ex">Instance</span> <span class="st">&quot;cdb001&quot;</span>, status READY, has 1 handler<span class="er">(</span><span class="ex">s</span><span class="kw">)</span> <span class="cf">for</span> this <span class="ex">service...</span></span>
+<span id="cb3-28"><a href="#cb3-28"></a><span class="ex">Service</span> <span class="st">&quot;cdb001_DGMGRL.world&quot;</span> has 1 instance<span class="er">(</span><span class="ex">s</span><span class="kw">)</span><span class="bu">.</span></span>
+<span id="cb3-29"><a href="#cb3-29"></a>  <span class="ex">Instance</span> <span class="st">&quot;cdb001&quot;</span>, status UNKNOWN, has 1 handler<span class="er">(</span><span class="ex">s</span><span class="kw">)</span> <span class="cf">for</span> this <span class="ex">service...</span>       <span class="op">&lt;&lt;&lt;</span> SERVIÇO ESTÁTICO</span>
+<span id="cb3-30"><a href="#cb3-30"></a><span class="ex">Service</span> <span class="st">&quot;efbbb315a8f7344ae0530b31a8c0e2f0.world&quot;</span> has 1 instance<span class="er">(</span><span class="ex">s</span><span class="kw">)</span><span class="bu">.</span></span>
+<span id="cb3-31"><a href="#cb3-31"></a>  <span class="ex">Instance</span> <span class="st">&quot;cdb001&quot;</span>, status READY, has 1 handler<span class="er">(</span><span class="ex">s</span><span class="kw">)</span> <span class="cf">for</span> this <span class="ex">service...</span></span>
+<span id="cb3-32"><a href="#cb3-32"></a><span class="ex">Service</span> <span class="st">&quot;efbc4fde254a5135e0530b31a8c0e81c.world&quot;</span> has 1 instance<span class="er">(</span><span class="ex">s</span><span class="kw">)</span><span class="bu">.</span></span>
+<span id="cb3-33"><a href="#cb3-33"></a>  <span class="ex">Instance</span> <span class="st">&quot;cdb001&quot;</span>, status READY, has 1 handler<span class="er">(</span><span class="ex">s</span><span class="kw">)</span> <span class="cf">for</span> this <span class="ex">service...</span></span>
+<span id="cb3-34"><a href="#cb3-34"></a><span class="ex">Service</span> <span class="st">&quot;efcbf70b67fe3819e0530b31a8c0d96e.world&quot;</span> has 1 instance<span class="er">(</span><span class="ex">s</span><span class="kw">)</span><span class="bu">.</span></span>
+<span id="cb3-35"><a href="#cb3-35"></a>  <span class="ex">Instance</span> <span class="st">&quot;cdb001&quot;</span>, status READY, has 1 handler<span class="er">(</span><span class="ex">s</span><span class="kw">)</span> <span class="cf">for</span> this <span class="ex">service...</span></span>
+<span id="cb3-36"><a href="#cb3-36"></a><span class="ex">Service</span> <span class="st">&quot;efcbf70b68003819e0530b31a8c0d96e.world&quot;</span> has 1 instance<span class="er">(</span><span class="ex">s</span><span class="kw">)</span><span class="bu">.</span></span>
+<span id="cb3-37"><a href="#cb3-37"></a>  <span class="ex">Instance</span> <span class="st">&quot;cdb001&quot;</span>, status READY, has 1 handler<span class="er">(</span><span class="ex">s</span><span class="kw">)</span> <span class="cf">for</span> this <span class="ex">service...</span></span>
+<span id="cb3-38"><a href="#cb3-38"></a><span class="ex">Service</span> <span class="st">&quot;orcl001.world&quot;</span> has 1 instance<span class="er">(</span><span class="ex">s</span><span class="kw">)</span><span class="bu">.</span></span>
+<span id="cb3-39"><a href="#cb3-39"></a>  <span class="ex">Instance</span> <span class="st">&quot;orcl001&quot;</span>, status READY, has 1 handler<span class="er">(</span><span class="ex">s</span><span class="kw">)</span> <span class="cf">for</span> this <span class="ex">service...</span></span>
+<span id="cb3-40"><a href="#cb3-40"></a><span class="ex">Service</span> <span class="st">&quot;orcl001XDB.world&quot;</span> has 1 instance<span class="er">(</span><span class="ex">s</span><span class="kw">)</span><span class="bu">.</span></span>
+<span id="cb3-41"><a href="#cb3-41"></a>  <span class="ex">Instance</span> <span class="st">&quot;orcl001&quot;</span>, status READY, has 1 handler<span class="er">(</span><span class="ex">s</span><span class="kw">)</span> <span class="cf">for</span> this <span class="ex">service...</span></span>
+<span id="cb3-42"><a href="#cb3-42"></a><span class="ex">Service</span> <span class="st">&quot;pdb001.world&quot;</span> has 1 instance<span class="er">(</span><span class="ex">s</span><span class="kw">)</span><span class="bu">.</span></span>
+<span id="cb3-43"><a href="#cb3-43"></a>  <span class="ex">Instance</span> <span class="st">&quot;cdb001&quot;</span>, status READY, has 1 handler<span class="er">(</span><span class="ex">s</span><span class="kw">)</span> <span class="cf">for</span> this <span class="ex">service...</span></span>
+<span id="cb3-44"><a href="#cb3-44"></a><span class="ex">Service</span> <span class="st">&quot;pdb002.world&quot;</span> has 1 instance<span class="er">(</span><span class="ex">s</span><span class="kw">)</span><span class="bu">.</span></span>
+<span id="cb3-45"><a href="#cb3-45"></a>  <span class="ex">Instance</span> <span class="st">&quot;cdb001&quot;</span>, status READY, has 1 handler<span class="er">(</span><span class="ex">s</span><span class="kw">)</span> <span class="cf">for</span> this <span class="ex">service...</span></span>
+<span id="cb3-46"><a href="#cb3-46"></a><span class="ex">Service</span> <span class="st">&quot;pdb003.world&quot;</span> has 1 instance<span class="er">(</span><span class="ex">s</span><span class="kw">)</span><span class="bu">.</span></span>
+<span id="cb3-47"><a href="#cb3-47"></a>  <span class="ex">Instance</span> <span class="st">&quot;cdb001&quot;</span>, status READY, has 1 handler<span class="er">(</span><span class="ex">s</span><span class="kw">)</span> <span class="cf">for</span> this <span class="ex">service...</span></span>
+<span id="cb3-48"><a href="#cb3-48"></a><span class="ex">The</span> command completed successfully</span>
+<span id="cb3-49"><a href="#cb3-49"></a><span class="ex">[oracle@linux01</span> cdb001 ~]$</span></code></pre></div>
+<h3 data-number="2.1.2" id="tnsnames"><span class="header-section-number">2.1.2</span> Tnsnames</h3>
+<p>Incluir no arquivo
+<code>$ORACLE_HOME/network/admin/tnsnames.ora</code>:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb4-1"><a href="#cb4-1"></a>CDB001 =</span>
+<span id="cb4-2"><a href="#cb4-2"></a>  (DESCRIPTION =</span>
+<span id="cb4-3"><a href="#cb4-3"></a>    (ADDRESS = (PROTOCOL = TCP)(HOST = linux01.gcp.goldopet.win)(PORT = 1521))</span>
+<span id="cb4-4"><a href="#cb4-4"></a>    (CONNECT_DATA =</span>
+<span id="cb4-5"><a href="#cb4-5"></a>      (SERVER = DEDICATED)</span>
+<span id="cb4-6"><a href="#cb4-6"></a>      (SERVICE_NAME = cdb001.world)</span>
+<span id="cb4-7"><a href="#cb4-7"></a>    )</span>
+<span id="cb4-8"><a href="#cb4-8"></a>  )</span>
+<span id="cb4-9"><a href="#cb4-9"></a></span>
+<span id="cb4-10"><a href="#cb4-10"></a>CDB001_dg =</span>
+<span id="cb4-11"><a href="#cb4-11"></a>  (DESCRIPTION =</span>
+<span id="cb4-12"><a href="#cb4-12"></a>    (ADDRESS = (PROTOCOL = TCP)(HOST = linux02.gcp.goldopet.win)(PORT = 1521))</span>
+<span id="cb4-13"><a href="#cb4-13"></a>    (CONNECT_DATA =</span>
+<span id="cb4-14"><a href="#cb4-14"></a>      (SERVER = DEDICATED)</span>
+<span id="cb4-15"><a href="#cb4-15"></a>      (SERVICE_NAME = cdb001_dg.world)</span>
+<span id="cb4-16"><a href="#cb4-16"></a>    )</span>
+<span id="cb4-17"><a href="#cb4-17"></a>  )</span></code></pre></div>
+<h3 data-number="2.1.3" id="criar-standby-redo-logs---número-de-redo-log-groups-1"><span class="header-section-number">2.1.3</span> Criar standby redo logs -
+Número de redo log groups + 1</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode numberSource sql numberLines"><code class="sourceCode sql"><span id="cb5-1"><a href="#cb5-1"></a><span class="kw">alter</span> <span class="kw">database</span> <span class="kw">add</span> <span class="kw">standby</span> <span class="kw">logfile</span> <span class="kw">thread</span> <span class="dv">1</span> <span class="kw">group</span> <span class="dv">7</span> <span class="kw">size</span> 200m;</span>
+<span id="cb5-2"><a href="#cb5-2"></a><span class="kw">alter</span> <span class="kw">database</span> <span class="kw">add</span> <span class="kw">standby</span> <span class="kw">logfile</span> <span class="kw">thread</span> <span class="dv">1</span> <span class="kw">group</span> <span class="dv">8</span> <span class="kw">size</span> 200m;</span>
+<span id="cb5-3"><a href="#cb5-3"></a><span class="kw">alter</span> <span class="kw">database</span> <span class="kw">add</span> <span class="kw">standby</span> <span class="kw">logfile</span> <span class="kw">thread</span> <span class="dv">1</span> <span class="kw">group</span> <span class="dv">9</span> <span class="kw">size</span> 200m;</span>
+<span id="cb5-4"><a href="#cb5-4"></a><span class="kw">alter</span> <span class="kw">database</span> <span class="kw">add</span> <span class="kw">standby</span> <span class="kw">logfile</span> <span class="kw">thread</span> <span class="dv">1</span> <span class="kw">group</span> <span class="dv">10</span> <span class="kw">size</span> 200m;</span>
+<span id="cb5-5"><a href="#cb5-5"></a><span class="kw">alter</span> <span class="kw">database</span> <span class="kw">add</span> <span class="kw">standby</span> <span class="kw">logfile</span> <span class="kw">thread</span> <span class="dv">1</span> <span class="kw">group</span> <span class="dv">11</span> <span class="kw">size</span> 200m;</span>
+<span id="cb5-6"><a href="#cb5-6"></a><span class="kw">alter</span> <span class="kw">database</span> <span class="kw">add</span> <span class="kw">standby</span> <span class="kw">logfile</span> <span class="kw">thread</span> <span class="dv">1</span> <span class="kw">group</span> <span class="dv">12</span> <span class="kw">size</span> 200m;</span>
+<span id="cb5-7"><a href="#cb5-7"></a><span class="kw">alter</span> <span class="kw">database</span> <span class="kw">add</span> <span class="kw">standby</span> <span class="kw">logfile</span> <span class="kw">thread</span> <span class="dv">1</span> <span class="kw">group</span> <span class="dv">13</span> <span class="kw">size</span> 200m;</span></code></pre></div>
+<h3 data-number="2.1.4" id="colocar-banco-em-flashback---opcional"><span class="header-section-number">2.1.4</span> Colocar banco em flashback -
+Opcional</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode numberSource sql numberLines"><code class="sourceCode sql"><span id="cb6-1"><a href="#cb6-1"></a><span class="kw">alter</span> <span class="kw">database</span> <span class="kw">flashback</span> <span class="kw">on</span>;</span></code></pre></div>
+<h2 data-number="2.2" id="standby"><span class="header-section-number">2.2</span> Standby</h2>
+<h3 data-number="2.2.1" id="listener---entradas-estáticas-1"><span class="header-section-number">2.2.1</span> Listener - Entradas
+estáticas</h3>
+<p>Incluir no arquivo
+<code>$ORACLE_HOME/network/admin/listener.ora</code>:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb7-1"><a href="#cb7-1"></a>SID_LIST_LISTENER=</span>
+<span id="cb7-2"><a href="#cb7-2"></a>      (</span>
+<span id="cb7-3"><a href="#cb7-3"></a>        SID_LIST=</span>
+<span id="cb7-4"><a href="#cb7-4"></a>          (</span>
+<span id="cb7-5"><a href="#cb7-5"></a>            SID_DESC=</span>
+<span id="cb7-6"><a href="#cb7-6"></a>              (SID_NAME=cdb001_dg)</span>
+<span id="cb7-7"><a href="#cb7-7"></a>              (GLOBAL_DBNAME=cdb001_dg_DGMGRL.world)</span>
+<span id="cb7-8"><a href="#cb7-8"></a>              (ORACLE_HOME=/u01/app/oracle/product/19.0.0/db_1)</span>
+<span id="cb7-9"><a href="#cb7-9"></a>              (ENVS=&quot;TNS_ADMIN=/u01/app/oracle/product/19.0.0/db_1/network/admin&quot;)</span>
+<span id="cb7-10"><a href="#cb7-10"></a>          )</span>
+<span id="cb7-11"><a href="#cb7-11"></a>          (</span>
+<span id="cb7-12"><a href="#cb7-12"></a>            SID_DESC=</span>
+<span id="cb7-13"><a href="#cb7-13"></a>              (SID_NAME=cdb001_dg)</span>
+<span id="cb7-14"><a href="#cb7-14"></a>              (GLOBAL_DBNAME=cdb001_dg.world)</span>
+<span id="cb7-15"><a href="#cb7-15"></a>              (ORACLE_HOME=/u01/app/oracle/product/19.0.0/db_1)</span>
+<span id="cb7-16"><a href="#cb7-16"></a>              (ENVS=&quot;TNS_ADMIN=/u01/app/oracle/product/19.0.0/db_1/network/admin&quot;)</span>
+<span id="cb7-17"><a href="#cb7-17"></a>          )</span>
+<span id="cb7-18"><a href="#cb7-18"></a>      )</span></code></pre></div>
+<p>Execute um stop/start do listener:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode numberSource bash numberLines"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1"></a><span class="ex">lsnrctl</span> stop LISTENER <span class="kw">&amp;&amp;</span> <span class="ex">lsnrctl</span> start LISTENER</span></code></pre></div>
+<p>Verifique que os serviços estáticos estão disponíveis:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode numberSource bash numberLines"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1"></a><span class="ex">[oracle@linux02</span> cdb002 admin]$ lsnrctl status</span>
+<span id="cb9-2"><a href="#cb9-2"></a></span>
+<span id="cb9-3"><a href="#cb9-3"></a><span class="ex">LSNRCTL</span> for Linux: Version 19.0.0.0.0 <span class="at">-</span> Production on 30-DEC-2022 21:13:33</span>
+<span id="cb9-4"><a href="#cb9-4"></a></span>
+<span id="cb9-5"><a href="#cb9-5"></a><span class="ex">Copyright</span> <span class="er">(</span><span class="ex">c</span><span class="kw">)</span> <span class="ex">1991,</span> 2022, Oracle.  All rights reserved.</span>
+<span id="cb9-6"><a href="#cb9-6"></a></span>
+<span id="cb9-7"><a href="#cb9-7"></a><span class="ex">Connecting</span> to <span class="er">(</span><span class="va">DESCRIPTION</span><span class="op">=</span><span class="va">(</span>ADDRESS=<span class="er">(</span>PROTOCOL=TCP<span class="va">)</span><span class="kw">(</span><span class="va">HOST</span><span class="op">=</span>linux02.gcp.goldopet.win<span class="kw">)(</span><span class="va">PORT</span><span class="op">=</span>1521<span class="kw">))</span><span class="er">)</span></span>
+<span id="cb9-8"><a href="#cb9-8"></a><span class="ex">STATUS</span> of the LISTENER</span>
+<span id="cb9-9"><a href="#cb9-9"></a><span class="ex">------------------------</span></span>
+<span id="cb9-10"><a href="#cb9-10"></a><span class="ex">Alias</span>                     LISTENER</span>
+<span id="cb9-11"><a href="#cb9-11"></a><span class="ex">Version</span>                   TNSLSNR for Linux: Version 19.0.0.0.0 <span class="at">-</span> Production</span>
+<span id="cb9-12"><a href="#cb9-12"></a><span class="ex">Start</span> Date                30-DEC-2022 21:13:23</span>
+<span id="cb9-13"><a href="#cb9-13"></a><span class="ex">Uptime</span>                    0 days 0 hr. 0 min. 9 sec</span>
+<span id="cb9-14"><a href="#cb9-14"></a><span class="ex">Trace</span> Level               off</span>
+<span id="cb9-15"><a href="#cb9-15"></a><span class="ex">Security</span>                  ON: Local OS Authentication</span>
+<span id="cb9-16"><a href="#cb9-16"></a><span class="ex">SNMP</span>                      OFF</span>
+<span id="cb9-17"><a href="#cb9-17"></a><span class="ex">Listener</span> Parameter File   /u01/app/oracle/product/19.0.0/db_1/network/admin/listener.ora</span>
+<span id="cb9-18"><a href="#cb9-18"></a><span class="ex">Listener</span> Log File         /u01/app/oracle/diag/tnslsnr/linux02/listener/alert/log.xml</span>
+<span id="cb9-19"><a href="#cb9-19"></a><span class="ex">Listening</span> Endpoints Summary...</span>
+<span id="cb9-20"><a href="#cb9-20"></a>  <span class="kw">(</span><span class="va">DESCRIPTION</span><span class="op">=</span><span class="va">(</span>ADDRESS=<span class="er">(</span>PROTOCOL=tcp<span class="va">)</span><span class="kw">(</span><span class="va">HOST</span><span class="op">=</span>linux02.gcp.goldopet.win<span class="kw">)(</span><span class="va">PORT</span><span class="op">=</span>1521<span class="kw">))</span><span class="er">)</span></span>
+<span id="cb9-21"><a href="#cb9-21"></a>  <span class="kw">(</span><span class="va">DESCRIPTION</span><span class="op">=</span><span class="va">(</span>ADDRESS=<span class="er">(</span>PROTOCOL=ipc<span class="va">)</span><span class="kw">(</span><span class="va">KEY</span><span class="op">=</span>EXTPROC1521<span class="kw">))</span><span class="er">)</span></span>
+<span id="cb9-22"><a href="#cb9-22"></a><span class="ex">Services</span> Summary...</span>
+<span id="cb9-23"><a href="#cb9-23"></a><span class="ex">Service</span> <span class="st">&quot;cdb001_dg.world&quot;</span> has 1 instance<span class="er">(</span><span class="ex">s</span><span class="kw">)</span><span class="bu">.</span></span>
+<span id="cb9-24"><a href="#cb9-24"></a>  <span class="ex">Instance</span> <span class="st">&quot;cdb001&quot;</span>, status UNKNOWN, has 1 handler<span class="er">(</span><span class="ex">s</span><span class="kw">)</span> <span class="cf">for</span> this <span class="ex">service...</span>   <span class="op">&lt;&lt;&lt;</span> SERVIÇO ESTÁTICO</span>
+<span id="cb9-25"><a href="#cb9-25"></a><span class="ex">Service</span> <span class="st">&quot;cdb001_dg_DGMGRL.world&quot;</span> has 1 instance<span class="er">(</span><span class="ex">s</span><span class="kw">)</span><span class="bu">.</span></span>
+<span id="cb9-26"><a href="#cb9-26"></a>  <span class="ex">Instance</span> <span class="st">&quot;cdb001&quot;</span>, status UNKNOWN, has 1 handler<span class="er">(</span><span class="ex">s</span><span class="kw">)</span> <span class="cf">for</span> this <span class="ex">service...</span>   <span class="op">&lt;&lt;&lt;</span> SERVIÇO ESTÁTICO</span>
+<span id="cb9-27"><a href="#cb9-27"></a><span class="ex">The</span> command completed successfully</span>
+<span id="cb9-28"><a href="#cb9-28"></a><span class="ex">[oracle@linux02</span> cdb002 admin]$</span></code></pre></div>
+<h3 data-number="2.2.2" id="tnsnames-1"><span class="header-section-number">2.2.2</span> Tnsnames</h3>
+<p>Incluir no arquivo
+<code>$ORACLE_HOME/network/admin/tnsnames.ora</code>:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb10-1"><a href="#cb10-1"></a>CDB001 =</span>
+<span id="cb10-2"><a href="#cb10-2"></a>  (DESCRIPTION =</span>
+<span id="cb10-3"><a href="#cb10-3"></a>    (ADDRESS = (PROTOCOL = TCP)(HOST = linux01.gcp.goldopet.win)(PORT = 1521))</span>
+<span id="cb10-4"><a href="#cb10-4"></a>    (CONNECT_DATA =</span>
+<span id="cb10-5"><a href="#cb10-5"></a>      (SERVER = DEDICATED)</span>
+<span id="cb10-6"><a href="#cb10-6"></a>      (SERVICE_NAME = cdb001.world)</span>
+<span id="cb10-7"><a href="#cb10-7"></a>    )</span>
+<span id="cb10-8"><a href="#cb10-8"></a>  )</span>
+<span id="cb10-9"><a href="#cb10-9"></a></span>
+<span id="cb10-10"><a href="#cb10-10"></a>CDB001_dg =</span>
+<span id="cb10-11"><a href="#cb10-11"></a>  (DESCRIPTION =</span>
+<span id="cb10-12"><a href="#cb10-12"></a>    (ADDRESS = (PROTOCOL = TCP)(HOST = linux02.gcp.goldopet.win)(PORT = 1521))</span>
+<span id="cb10-13"><a href="#cb10-13"></a>    (CONNECT_DATA =</span>
+<span id="cb10-14"><a href="#cb10-14"></a>      (SERVER = DEDICATED)</span>
+<span id="cb10-15"><a href="#cb10-15"></a>      (SERVICE_NAME = cdb001_dg.world)</span>
+<span id="cb10-16"><a href="#cb10-16"></a>    )</span>
+<span id="cb10-17"><a href="#cb10-17"></a>  )</span></code></pre></div>
+<h3 data-number="2.2.3" id="oratab"><span class="header-section-number">2.2.3</span> Oratab</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode numberSource bash numberLines"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1"></a><span class="bu">echo</span> <span class="st">&quot;cdb001_dg:</span><span class="va">$ORACLE_HOME</span><span class="st">:Y&quot;</span> <span class="op">&gt;&gt;</span> /etc/oratab</span></code></pre></div>
+<h3 data-number="2.2.4" id="pfile-inicial"><span class="header-section-number">2.2.4</span> Pfile inicial</h3>
+<div class="sourceCode" id="cb12"><pre class="sourceCode numberSource bash numberLines"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> <span class="va">$ORACLE_HOME</span>/dbs/initcdb001_dg.ora <span class="op">&lt;&lt;EOF</span></span>
+<span id="cb12-2"><a href="#cb12-2"></a><span class="st">db_name=cdb001</span></span>
+<span id="cb12-3"><a href="#cb12-3"></a><span class="st">db_unique_name=cdb001_dg</span></span>
+<span id="cb12-4"><a href="#cb12-4"></a><span class="st">db_domain=world</span></span>
+<span id="cb12-5"><a href="#cb12-5"></a><span class="st">sga_max_size=4G</span></span>
+<span id="cb12-6"><a href="#cb12-6"></a><span class="st">sga_target=4G</span></span>
+<span id="cb12-7"><a href="#cb12-7"></a><span class="op">EOF</span></span></code></pre></div>
+<h3 data-number="2.2.5" id="criar-diretórios"><span class="header-section-number">2.2.5</span> Criar diretórios</h3>
+<div class="sourceCode" id="cb13"><pre class="sourceCode numberSource bash numberLines"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> /u02/oradata /u03/fast_recovery_area /u01/app/oracle/admin/cdb001_dg/adump</span></code></pre></div>
+<h3 data-number="2.2.6" id="copiar-password-file-da-primary"><span class="header-section-number">2.2.6</span> Copiar password file da
+primary</h3>
+<div class="sourceCode" id="cb14"><pre class="sourceCode numberSource bash numberLines"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1"></a><span class="fu">scp</span> linux01:<span class="va">$ORACLE_HOME</span>/dbs/orapwcdb001 <span class="va">$ORACLE_HOME</span>/dbs/orapwcdb001_dg</span></code></pre></div>
+<h3 data-number="2.2.7" id="startup-nomount"><span class="header-section-number">2.2.7</span> Startup Nomount</h3>
+<div class="sourceCode" id="cb15"><pre class="sourceCode numberSource bash numberLines"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1"></a><span class="bu">export</span> <span class="va">ORACLE_SID</span><span class="op">=</span>cdb001_dg</span>
+<span id="cb15-2"><a href="#cb15-2"></a><span class="bu">export</span> <span class="va">ORAENV_ASK</span><span class="op">=</span>NO</span>
+<span id="cb15-3"><a href="#cb15-3"></a><span class="bu">.</span> oraenv</span>
+<span id="cb15-4"><a href="#cb15-4"></a></span>
+<span id="cb15-5"><a href="#cb15-5"></a><span class="ex">sqlplus</span> / as sysdba <span class="op">&lt;&lt;EOF</span></span>
+<span id="cb15-6"><a href="#cb15-6"></a><span class="st">startup nomount</span></span>
+<span id="cb15-7"><a href="#cb15-7"></a><span class="st">exit</span></span>
+<span id="cb15-8"><a href="#cb15-8"></a><span class="op">EOF</span></span></code></pre></div>
+<h3 data-number="2.2.8" id="executar-duplicate"><span class="header-section-number">2.2.8</span> Executar Duplicate</h3>
+<div class="sourceCode" id="cb16"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb16-1"><a href="#cb16-1"></a>connect target sys/&lt;SENHA&gt;@cdb001</span>
+<span id="cb16-2"><a href="#cb16-2"></a>connect auxiliary sys/&lt;SENHA&gt;@cdb001_dg</span>
+<span id="cb16-3"><a href="#cb16-3"></a></span>
+<span id="cb16-4"><a href="#cb16-4"></a>run {</span>
+<span id="cb16-5"><a href="#cb16-5"></a>    allocate channel ch1 device type disk;</span>
+<span id="cb16-6"><a href="#cb16-6"></a>    allocate channel ch2 device type disk;</span>
+<span id="cb16-7"><a href="#cb16-7"></a>    allocate channel ch3 device type disk;</span>
+<span id="cb16-8"><a href="#cb16-8"></a>    allocate channel ch4 device type disk;</span>
+<span id="cb16-9"><a href="#cb16-9"></a></span>
+<span id="cb16-10"><a href="#cb16-10"></a>    allocate auxiliary channel aux1 device type disk;</span>
+<span id="cb16-11"><a href="#cb16-11"></a>    allocate auxiliary channel aux2 device type disk;</span>
+<span id="cb16-12"><a href="#cb16-12"></a>    allocate auxiliary channel aux3 device type disk;</span>
+<span id="cb16-13"><a href="#cb16-13"></a>    allocate auxiliary channel aux4 device type disk;</span>
+<span id="cb16-14"><a href="#cb16-14"></a></span>
+<span id="cb16-15"><a href="#cb16-15"></a>    set newname for database to new;</span>
+<span id="cb16-16"><a href="#cb16-16"></a></span>
+<span id="cb16-17"><a href="#cb16-17"></a>    duplicate target database</span>
+<span id="cb16-18"><a href="#cb16-18"></a>      for standby</span>
+<span id="cb16-19"><a href="#cb16-19"></a>      from active database section size 200m</span>
+<span id="cb16-20"><a href="#cb16-20"></a>      dorecover</span>
+<span id="cb16-21"><a href="#cb16-21"></a>      spfile</span>
+<span id="cb16-22"><a href="#cb16-22"></a>        set db_unique_name=&#39;cdb001_dg&#39;</span>
+<span id="cb16-23"><a href="#cb16-23"></a>        set audit_file_dest=&#39;/u01/app/oracle/admin/cdb001_dg/adump&#39;</span>
+<span id="cb16-24"><a href="#cb16-24"></a>        set job_queue_processes=&#39;0&#39;</span>
+<span id="cb16-25"><a href="#cb16-25"></a>      nofilenamecheck;</span>
+<span id="cb16-26"><a href="#cb16-26"></a>}</span></code></pre></div>
+<h1 data-number="3" id="configuração-do-broker"><span class="header-section-number">3</span> Configuração do Broker</h1>
+<h2 data-number="3.1" id="ativar-o-dmon-processo-do-dg-broker---primary-e-standby"><span class="header-section-number">3.1</span> Ativar o DMON (Processo do DG
+Broker) - Primary e Standby</h2>
+<div class="sourceCode" id="cb17"><pre class="sourceCode numberSource sql numberLines"><code class="sourceCode sql"><span id="cb17-1"><a href="#cb17-1"></a><span class="kw">alter</span> <span class="kw">system</span> <span class="kw">set</span> dg_broker_start<span class="op">=</span><span class="kw">true</span>;</span></code></pre></div>
+<h2 data-number="3.2" id="configurar-o-data-guard-via-broker---primary"><span class="header-section-number">3.2</span> Configurar o Data Guard via
+Broker - Primary</h2>
+<p>Abrir o DGMGRL (conectar via TNS):</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode numberSource bash numberLines"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1"></a><span class="ex">dgmgrl</span> sys@cdb001</span></code></pre></div>
+<p>Criar configuração:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb19-1"><a href="#cb19-1"></a>CREATE CONFIGURATION &#39;cdb001-standby&#39; AS</span>
+<span id="cb19-2"><a href="#cb19-2"></a>    PRIMARY DATABASE IS &#39;cdb001&#39;</span>
+<span id="cb19-3"><a href="#cb19-3"></a>    CONNECT IDENTIFIER IS cdb001;</span></code></pre></div>
+<p>Resultado esperado:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb20-1"><a href="#cb20-1"></a>Configuration &quot;cdb001-standby&quot; created with primary database &quot;cdb001&quot;</span></code></pre></div>
+<p>Adicionar o banco standby:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb21-1"><a href="#cb21-1"></a>ADD DATABASE &#39;cdb001_dg&#39; AS CONNECT IDENTIFIER IS cdb001_dg;</span></code></pre></div>
+<p>Resultado esperado:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb22-1"><a href="#cb22-1"></a>Database &quot;cdb001_dg&quot; added</span></code></pre></div>
+<h2 data-number="3.3" id="iniciar-a-replicação---primary"><span class="header-section-number">3.3</span> Iniciar a Replicação -
+Primary</h2>
+<p>Abrir o DGMGRL (conectar via TNS):</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode numberSource bash numberLines"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1"></a><span class="ex">dgmgrl</span> sys@cdb001</span></code></pre></div>
+<p>Habilite a configuração:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb24-1"><a href="#cb24-1"></a>ENABLE CONFIGURATION;</span></code></pre></div>
+<p>No SQL*Plus, force um log switch:</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb25-1"><a href="#cb25-1"></a>alter system archive log current;</span></code></pre></div>
+<p>Volte ao DGMGRL e ajuste os parâmetros abaixo:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb26-1"><a href="#cb26-1"></a>EDIT DATABASE CDB001 SET PROPERTY &#39;StandbyFileManagement&#39;=&#39;AUTO&#39;;</span>
+<span id="cb26-2"><a href="#cb26-2"></a>EDIT DATABASE CDB001_DG SET PROPERTY &#39;StandbyFileManagement&#39;=&#39;AUTO&#39;;</span>
+<span id="cb26-3"><a href="#cb26-3"></a></span>
+<span id="cb26-4"><a href="#cb26-4"></a>EDIT DATABASE CDB001 SET PROPERTY &#39;StandbyArchiveLocation&#39;=&#39;USE_DB_RECOVERY_FILE_DEST&#39;;</span>
+<span id="cb26-5"><a href="#cb26-5"></a>EDIT DATABASE CDB001_DG SET PROPERTY &#39;StandbyArchiveLocation&#39;=&#39;USE_DB_RECOVERY_FILE_DEST&#39;;</span>
+<span id="cb26-6"><a href="#cb26-6"></a></span>
+<span id="cb26-7"><a href="#cb26-7"></a>EDIT DATABASE CDB001 SET PROPERTY &#39;ApplyLagThreshold&#39;=&#39;300&#39;;</span>
+<span id="cb26-8"><a href="#cb26-8"></a>EDIT DATABASE CDB001_DG SET PROPERTY &#39;ApplyLagThreshold&#39;=&#39;300&#39;;</span>
+<span id="cb26-9"><a href="#cb26-9"></a></span>
+<span id="cb26-10"><a href="#cb26-10"></a>EDIT DATABASE CDB001 SET PROPERTY &#39;TransportLagThreshold&#39;=&#39;300&#39;;</span>
+<span id="cb26-11"><a href="#cb26-11"></a>EDIT DATABASE CDB001_DG SET PROPERTY &#39;TransportLagThreshold&#39;=&#39;300&#39;;</span>
+<span id="cb26-12"><a href="#cb26-12"></a></span>
+<span id="cb26-13"><a href="#cb26-13"></a>EDIT DATABASE CDB001 SET PROPERTY &#39;Binding&#39;=&#39;Mandatory&#39;;</span>
+<span id="cb26-14"><a href="#cb26-14"></a>EDIT DATABASE CDB001_DG SET PROPERTY &#39;Binding&#39;=&#39;Mandatory&#39;;</span></code></pre></div>
+<h2 data-number="3.4" id="validar-o-data-guard"><span class="header-section-number">3.4</span> Validar o Data Guard</h2>
+<p>Abrir o DGMGRL (conectar via TNS ou /):</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode numberSource bash numberLines"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1"></a><span class="ex">dgmgrl</span> sys@cdb001</span></code></pre></div>
+<p>Validar configuração:</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb28-1"><a href="#cb28-1"></a>show configuration verbose</span></code></pre></div>
+<p>Resultado esperado:</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb29-1"><a href="#cb29-1"></a>DGMGRL&gt; show configuration verbose</span>
+<span id="cb29-2"><a href="#cb29-2"></a></span>
+<span id="cb29-3"><a href="#cb29-3"></a>Configuration - cdb001-standby</span>
+<span id="cb29-4"><a href="#cb29-4"></a></span>
+<span id="cb29-5"><a href="#cb29-5"></a>  Protection Mode: MaxPerformance</span>
+<span id="cb29-6"><a href="#cb29-6"></a>  Members:</span>
+<span id="cb29-7"><a href="#cb29-7"></a>  cdb001    - Primary database</span>
+<span id="cb29-8"><a href="#cb29-8"></a>    cdb001_dg - Physical standby database</span>
+<span id="cb29-9"><a href="#cb29-9"></a></span>
+<span id="cb29-10"><a href="#cb29-10"></a>  Properties:</span>
+<span id="cb29-11"><a href="#cb29-11"></a>    FastStartFailoverThreshold      = &#39;30&#39;</span>
+<span id="cb29-12"><a href="#cb29-12"></a>    OperationTimeout                = &#39;30&#39;</span>
+<span id="cb29-13"><a href="#cb29-13"></a>    TraceLevel                      = &#39;USER&#39;</span>
+<span id="cb29-14"><a href="#cb29-14"></a>    FastStartFailoverLagLimit       = &#39;30&#39;</span>
+<span id="cb29-15"><a href="#cb29-15"></a>    CommunicationTimeout            = &#39;180&#39;</span>
+<span id="cb29-16"><a href="#cb29-16"></a>    ObserverReconnect               = &#39;0&#39;</span>
+<span id="cb29-17"><a href="#cb29-17"></a>    FastStartFailoverAutoReinstate  = &#39;TRUE&#39;</span>
+<span id="cb29-18"><a href="#cb29-18"></a>    FastStartFailoverPmyShutdown    = &#39;TRUE&#39;</span>
+<span id="cb29-19"><a href="#cb29-19"></a>    BystandersFollowRoleChange      = &#39;ALL&#39;</span>
+<span id="cb29-20"><a href="#cb29-20"></a>    ObserverOverride                = &#39;FALSE&#39;</span>
+<span id="cb29-21"><a href="#cb29-21"></a>    ExternalDestination1            = &#39;&#39;</span>
+<span id="cb29-22"><a href="#cb29-22"></a>    ExternalDestination2            = &#39;&#39;</span>
+<span id="cb29-23"><a href="#cb29-23"></a>    PrimaryLostWriteAction          = &#39;CONTINUE&#39;</span>
+<span id="cb29-24"><a href="#cb29-24"></a>    ConfigurationWideServiceName    = &#39;cdb001_CFG&#39;</span>
+<span id="cb29-25"><a href="#cb29-25"></a></span>
+<span id="cb29-26"><a href="#cb29-26"></a>Fast-Start Failover:  Disabled</span>
+<span id="cb29-27"><a href="#cb29-27"></a></span>
+<span id="cb29-28"><a href="#cb29-28"></a>Configuration Status:</span>
+<span id="cb29-29"><a href="#cb29-29"></a>SUCCESS</span></code></pre></div>
+<p>Validar primary:</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb30-1"><a href="#cb30-1"></a>show database verbose cdb001</span></code></pre></div>
+<p>Resultado esperado:</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb31-1"><a href="#cb31-1"></a>DGMGRL&gt; show database verbose cdb001</span>
+<span id="cb31-2"><a href="#cb31-2"></a></span>
+<span id="cb31-3"><a href="#cb31-3"></a>Database - cdb001</span>
+<span id="cb31-4"><a href="#cb31-4"></a></span>
+<span id="cb31-5"><a href="#cb31-5"></a>  Role:               PRIMARY</span>
+<span id="cb31-6"><a href="#cb31-6"></a>  Intended State:     TRANSPORT-ON</span>
+<span id="cb31-7"><a href="#cb31-7"></a>  Instance(s):</span>
+<span id="cb31-8"><a href="#cb31-8"></a>    cdb001</span>
+<span id="cb31-9"><a href="#cb31-9"></a></span>
+<span id="cb31-10"><a href="#cb31-10"></a>  Properties:</span>
+<span id="cb31-11"><a href="#cb31-11"></a>    DGConnectIdentifier             = &#39;cdb001&#39;</span>
+<span id="cb31-12"><a href="#cb31-12"></a>    ObserverConnectIdentifier       = &#39;&#39;</span>
+<span id="cb31-13"><a href="#cb31-13"></a>    FastStartFailoverTarget         = &#39;&#39;</span>
+<span id="cb31-14"><a href="#cb31-14"></a>    PreferredObserverHosts          = &#39;&#39;</span>
+<span id="cb31-15"><a href="#cb31-15"></a>    LogShipping                     = &#39;ON&#39;</span>
+<span id="cb31-16"><a href="#cb31-16"></a>    RedoRoutes                      = &#39;&#39;</span>
+<span id="cb31-17"><a href="#cb31-17"></a>    LogXptMode                      = &#39;ASYNC&#39;</span>
+<span id="cb31-18"><a href="#cb31-18"></a>    DelayMins                       = &#39;0&#39;</span>
+<span id="cb31-19"><a href="#cb31-19"></a>    Binding                         = &#39;Mandatory&#39;</span>
+<span id="cb31-20"><a href="#cb31-20"></a>    MaxFailure                      = &#39;0&#39;</span>
+<span id="cb31-21"><a href="#cb31-21"></a>    ReopenSecs                      = &#39;300&#39;</span>
+<span id="cb31-22"><a href="#cb31-22"></a>    NetTimeout                      = &#39;30&#39;</span>
+<span id="cb31-23"><a href="#cb31-23"></a>    RedoCompression                 = &#39;DISABLE&#39;</span>
+<span id="cb31-24"><a href="#cb31-24"></a>    PreferredApplyInstance          = &#39;&#39;</span>
+<span id="cb31-25"><a href="#cb31-25"></a>    ApplyInstanceTimeout            = &#39;0&#39;</span>
+<span id="cb31-26"><a href="#cb31-26"></a>    ApplyLagThreshold               = &#39;300&#39;</span>
+<span id="cb31-27"><a href="#cb31-27"></a>    TransportLagThreshold           = &#39;300&#39;</span>
+<span id="cb31-28"><a href="#cb31-28"></a>    TransportDisconnectedThreshold  = &#39;30&#39;</span>
+<span id="cb31-29"><a href="#cb31-29"></a>    ApplyParallel                   = &#39;AUTO&#39;</span>
+<span id="cb31-30"><a href="#cb31-30"></a>    ApplyInstances                  = &#39;0&#39;</span>
+<span id="cb31-31"><a href="#cb31-31"></a>    StandbyFileManagement           = &#39;&#39;</span>
+<span id="cb31-32"><a href="#cb31-32"></a>    ArchiveLagTarget                = &#39;0&#39;</span>
+<span id="cb31-33"><a href="#cb31-33"></a>    LogArchiveMaxProcesses          = &#39;0&#39;</span>
+<span id="cb31-34"><a href="#cb31-34"></a>    LogArchiveMinSucceedDest        = &#39;0&#39;</span>
+<span id="cb31-35"><a href="#cb31-35"></a>    DataGuardSyncLatency            = &#39;0&#39;</span>
+<span id="cb31-36"><a href="#cb31-36"></a>    LogArchiveTrace                 = &#39;0&#39;</span>
+<span id="cb31-37"><a href="#cb31-37"></a>    LogArchiveFormat                = &#39;&#39;</span>
+<span id="cb31-38"><a href="#cb31-38"></a>    DbFileNameConvert               = &#39;&#39;</span>
+<span id="cb31-39"><a href="#cb31-39"></a>    LogFileNameConvert              = &#39;&#39;</span>
+<span id="cb31-40"><a href="#cb31-40"></a>    ArchiveLocation                 = &#39;&#39;</span>
+<span id="cb31-41"><a href="#cb31-41"></a>    AlternateLocation               = &#39;&#39;</span>
+<span id="cb31-42"><a href="#cb31-42"></a>    StandbyArchiveLocation          = &#39;USE_DB_RECOVERY_FILE_DEST&#39;</span>
+<span id="cb31-43"><a href="#cb31-43"></a>    StandbyAlternateLocation        = &#39;&#39;</span>
+<span id="cb31-44"><a href="#cb31-44"></a>    InconsistentProperties          = &#39;(monitor)&#39;</span>
+<span id="cb31-45"><a href="#cb31-45"></a>    InconsistentLogXptProps         = &#39;(monitor)&#39;</span>
+<span id="cb31-46"><a href="#cb31-46"></a>    LogXptStatus                    = &#39;(monitor)&#39;</span>
+<span id="cb31-47"><a href="#cb31-47"></a>    SendQEntries                    = &#39;(monitor)&#39;</span>
+<span id="cb31-48"><a href="#cb31-48"></a>    RecvQEntries                    = &#39;(monitor)&#39;</span>
+<span id="cb31-49"><a href="#cb31-49"></a>    HostName                        = &#39;linux01&#39;</span>
+<span id="cb31-50"><a href="#cb31-50"></a>    StaticConnectIdentifier         = &#39;(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=linux01.gcp.goldopet.win)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=cdb001_DGMGRL.world)(INSTANCE_NAME=cdb001)(SERVER=DEDICATED)))&#39;</span>
+<span id="cb31-51"><a href="#cb31-51"></a>    TopWaitEvents                   = &#39;(monitor)&#39;</span>
+<span id="cb31-52"><a href="#cb31-52"></a>    SidName                         = &#39;(monitor)&#39;</span>
+<span id="cb31-53"><a href="#cb31-53"></a></span>
+<span id="cb31-54"><a href="#cb31-54"></a>  Log file locations:</span>
+<span id="cb31-55"><a href="#cb31-55"></a>    Alert log               : /u01/app/oracle/diag/rdbms/cdb001/cdb001/trace/alert_cdb001.log</span>
+<span id="cb31-56"><a href="#cb31-56"></a>    Data Guard Broker log   : /u01/app/oracle/diag/rdbms/cdb001/cdb001/trace/drccdb001.log</span>
+<span id="cb31-57"><a href="#cb31-57"></a></span>
+<span id="cb31-58"><a href="#cb31-58"></a>Database Status:</span>
+<span id="cb31-59"><a href="#cb31-59"></a>SUCCESS</span>
+<span id="cb31-60"><a href="#cb31-60"></a></span>
+<span id="cb31-61"><a href="#cb31-61"></a>DGMGRL&gt;</span></code></pre></div>
+<p>Validar standby</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb32-1"><a href="#cb32-1"></a>show database verbose cdb001_dg</span></code></pre></div>
+<p>Resultado esperado:</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb33-1"><a href="#cb33-1"></a>DGMGRL&gt; show database verbose cdb001_dg</span>
+<span id="cb33-2"><a href="#cb33-2"></a></span>
+<span id="cb33-3"><a href="#cb33-3"></a>Database - cdb001_dg</span>
+<span id="cb33-4"><a href="#cb33-4"></a></span>
+<span id="cb33-5"><a href="#cb33-5"></a>  Role:               PHYSICAL STANDBY</span>
+<span id="cb33-6"><a href="#cb33-6"></a>  Intended State:     APPLY-ON</span>
+<span id="cb33-7"><a href="#cb33-7"></a>  Transport Lag:      0 seconds (computed 0 seconds ago)</span>
+<span id="cb33-8"><a href="#cb33-8"></a>  Apply Lag:          0 seconds (computed 0 seconds ago)</span>
+<span id="cb33-9"><a href="#cb33-9"></a>  Average Apply Rate: 47.00 KByte/s</span>
+<span id="cb33-10"><a href="#cb33-10"></a>  Active Apply Rate:  2.30 MByte/s</span>
+<span id="cb33-11"><a href="#cb33-11"></a>  Maximum Apply Rate: 5.51 MByte/s</span>
+<span id="cb33-12"><a href="#cb33-12"></a>  Real Time Query:    OFF</span>
+<span id="cb33-13"><a href="#cb33-13"></a>  Instance(s):</span>
+<span id="cb33-14"><a href="#cb33-14"></a>    cdb001_dg</span>
+<span id="cb33-15"><a href="#cb33-15"></a></span>
+<span id="cb33-16"><a href="#cb33-16"></a>  Properties:</span>
+<span id="cb33-17"><a href="#cb33-17"></a>    DGConnectIdentifier             = &#39;cdb001_dg&#39;</span>
+<span id="cb33-18"><a href="#cb33-18"></a>    ObserverConnectIdentifier       = &#39;&#39;</span>
+<span id="cb33-19"><a href="#cb33-19"></a>    FastStartFailoverTarget         = &#39;&#39;</span>
+<span id="cb33-20"><a href="#cb33-20"></a>    PreferredObserverHosts          = &#39;&#39;</span>
+<span id="cb33-21"><a href="#cb33-21"></a>    LogShipping                     = &#39;ON&#39;</span>
+<span id="cb33-22"><a href="#cb33-22"></a>    RedoRoutes                      = &#39;&#39;</span>
+<span id="cb33-23"><a href="#cb33-23"></a>    LogXptMode                      = &#39;ASYNC&#39;</span>
+<span id="cb33-24"><a href="#cb33-24"></a>    DelayMins                       = &#39;0&#39;</span>
+<span id="cb33-25"><a href="#cb33-25"></a>    Binding                         = &#39;Mandatory&#39;</span>
+<span id="cb33-26"><a href="#cb33-26"></a>    MaxFailure                      = &#39;0&#39;</span>
+<span id="cb33-27"><a href="#cb33-27"></a>    ReopenSecs                      = &#39;300&#39;</span>
+<span id="cb33-28"><a href="#cb33-28"></a>    NetTimeout                      = &#39;30&#39;</span>
+<span id="cb33-29"><a href="#cb33-29"></a>    RedoCompression                 = &#39;DISABLE&#39;</span>
+<span id="cb33-30"><a href="#cb33-30"></a>    PreferredApplyInstance          = &#39;&#39;</span>
+<span id="cb33-31"><a href="#cb33-31"></a>    ApplyInstanceTimeout            = &#39;0&#39;</span>
+<span id="cb33-32"><a href="#cb33-32"></a>    ApplyLagThreshold               = &#39;300&#39;</span>
+<span id="cb33-33"><a href="#cb33-33"></a>    TransportLagThreshold           = &#39;300&#39;</span>
+<span id="cb33-34"><a href="#cb33-34"></a>    TransportDisconnectedThreshold  = &#39;30&#39;</span>
+<span id="cb33-35"><a href="#cb33-35"></a>    ApplyParallel                   = &#39;AUTO&#39;</span>
+<span id="cb33-36"><a href="#cb33-36"></a>    ApplyInstances                  = &#39;0&#39;</span>
+<span id="cb33-37"><a href="#cb33-37"></a>    StandbyFileManagement           = &#39;&#39;</span>
+<span id="cb33-38"><a href="#cb33-38"></a>    ArchiveLagTarget                = &#39;0&#39;</span>
+<span id="cb33-39"><a href="#cb33-39"></a>    LogArchiveMaxProcesses          = &#39;0&#39;</span>
+<span id="cb33-40"><a href="#cb33-40"></a>    LogArchiveMinSucceedDest        = &#39;0&#39;</span>
+<span id="cb33-41"><a href="#cb33-41"></a>    DataGuardSyncLatency            = &#39;0&#39;</span>
+<span id="cb33-42"><a href="#cb33-42"></a>    LogArchiveTrace                 = &#39;0&#39;</span>
+<span id="cb33-43"><a href="#cb33-43"></a>    LogArchiveFormat                = &#39;&#39;</span>
+<span id="cb33-44"><a href="#cb33-44"></a>    DbFileNameConvert               = &#39;&#39;</span>
+<span id="cb33-45"><a href="#cb33-45"></a>    LogFileNameConvert              = &#39;&#39;</span>
+<span id="cb33-46"><a href="#cb33-46"></a>    ArchiveLocation                 = &#39;&#39;</span>
+<span id="cb33-47"><a href="#cb33-47"></a>    AlternateLocation               = &#39;&#39;</span>
+<span id="cb33-48"><a href="#cb33-48"></a>    StandbyArchiveLocation          = &#39;USE_DB_RECOVERY_FILE_DEST&#39;</span>
+<span id="cb33-49"><a href="#cb33-49"></a>    StandbyAlternateLocation        = &#39;&#39;</span>
+<span id="cb33-50"><a href="#cb33-50"></a>    InconsistentProperties          = &#39;(monitor)&#39;</span>
+<span id="cb33-51"><a href="#cb33-51"></a>    InconsistentLogXptProps         = &#39;(monitor)&#39;</span>
+<span id="cb33-52"><a href="#cb33-52"></a>    LogXptStatus                    = &#39;(monitor)&#39;</span>
+<span id="cb33-53"><a href="#cb33-53"></a>    SendQEntries                    = &#39;(monitor)&#39;</span>
+<span id="cb33-54"><a href="#cb33-54"></a>    RecvQEntries                    = &#39;(monitor)&#39;</span>
+<span id="cb33-55"><a href="#cb33-55"></a>    HostName                        = &#39;linux02&#39;</span>
+<span id="cb33-56"><a href="#cb33-56"></a>    StaticConnectIdentifier         = &#39;(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=linux02)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=cdb001_dg_DGMGRL.world)(INSTANCE_NAME=cdb001_dg)(SERVER=DEDICATED)))&#39;</span>
+<span id="cb33-57"><a href="#cb33-57"></a>    TopWaitEvents                   = &#39;(monitor)&#39;</span>
+<span id="cb33-58"><a href="#cb33-58"></a>    SidName                         = &#39;(monitor)&#39;</span>
+<span id="cb33-59"><a href="#cb33-59"></a></span>
+<span id="cb33-60"><a href="#cb33-60"></a>  Log file locations:</span>
+<span id="cb33-61"><a href="#cb33-61"></a>    Alert log               : /u01/app/oracle/diag/rdbms/cdb001_dg/cdb001_dg/trace/alert_cdb001_dg.log</span>
+<span id="cb33-62"><a href="#cb33-62"></a>    Data Guard Broker log   : /u01/app/oracle/diag/rdbms/cdb001_dg/cdb001_dg/trace/drccdb001_dg.log</span>
+<span id="cb33-63"><a href="#cb33-63"></a></span>
+<span id="cb33-64"><a href="#cb33-64"></a>Database Status:</span>
+<span id="cb33-65"><a href="#cb33-65"></a>SUCCESS</span>
+<span id="cb33-66"><a href="#cb33-66"></a></span>
+<span id="cb33-67"><a href="#cb33-67"></a>DGMGRL&gt;</span></code></pre></div>
+<h2 data-number="3.5" id="configurações-do-rman---standby"><span class="header-section-number">3.5</span> Configurações do RMAN -
+Standby</h2>
+<p>Caso deseje usar a base standby para offload dos backups, é
+obrigatório o uso de um catálogo acessível tanto pela Primary quanto
+pela Standby.</p>
+<p>Configuração do <code>ARCHIVELOG DELETION POLICY</code> - com uso de
+catálogo:</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb34-1"><a href="#cb34-1"></a>CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON STANDBY FOR db_unique_name &#39;cdb001_dg&#39;;</span></code></pre></div>
+<p>Configuração do <code>ARCHIVELOG DELETION POLICY</code> - sem uso de
+catálogo:</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb35-1"><a href="#cb35-1"></a>CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON STANDBY;</span></code></pre></div>
+<p>Essa configuração permite que os archivelogs na base Standby sejam
+gerenciados pela Fast Recovery Area, sem necessidade de limpeza manual
+ou via crontab.</p>
+<h2 data-number="3.6" id="configurações-do-rman---primary"><span class="header-section-number">3.6</span> Configurações do RMAN -
+Primary</h2>
+<ul>
+<li><p>Caso deseje usar a base standby para offload dos backups, é
+obrigatório o uso de um catálogo acessível tanto pela Primary quanto
+pela Standby.</p></li>
+<li><p>Reter na Primary Archives não recebidos na Standby:</p>
+<ul>
+<li><p>Configuração do <code>ARCHIVELOG DELETION POLICY</code> - com uso
+de catálogo:</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb36-1"><a href="#cb36-1"></a>CONFIGURE ARCHIVELOG DELETION POLICY TO SHIPPED TO STANDBY BACKED UP 1 TIMES TO DEVICE TYPE DISK FOR db_unique_name &#39;cdb001&#39;;</span></code></pre></div></li>
+<li><p>Configuração do <code>ARCHIVELOG DELETION POLICY</code> - sem uso
+de catálogo:</p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb37-1"><a href="#cb37-1"></a>CONFIGURE ARCHIVELOG DELETION POLICY TO SHIPPED TO STANDBY BACKED UP 1 TIMES TO DEVICE TYPE DISK;</span></code></pre></div></li>
+</ul></li>
+<li><p>Reter na Primary Archives não aplicados na Standby:</p>
+<ul>
+<li><p>Configuração do <code>ARCHIVELOG DELETION POLICY</code> - com uso
+de catálogo:</p>
+<div class="sourceCode" id="cb38"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb38-1"><a href="#cb38-1"></a>CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON STANDBY BACKED UP 1 TIMES TO DEVICE TYPE DISK FOR db_unique_name &#39;cdb001&#39;;</span></code></pre></div></li>
+<li><p>Configuração do <code>ARCHIVELOG DELETION POLICY</code> - sem uso
+de catálogo:</p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb39-1"><a href="#cb39-1"></a>CONFIGURE ARCHIVELOG DELETION POLICY TO APPLIED ON STANDBY BACKED UP 1 TIMES TO DEVICE TYPE DISK;</span></code></pre></div></li>
+</ul></li>
+<li><p>Não reter archives na Primary:</p>
+<ul>
+<li><p>Configuração do <code>ARCHIVELOG DELETION POLICY</code> - com uso
+de catálogo:</p>
+<div class="sourceCode" id="cb40"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb40-1"><a href="#cb40-1"></a>CONFIGURE ARCHIVELOG DELETION POLICY TO BACKED UP 1 TIMES TO DEVICE TYPE DISK FOR db_unique_name &#39;cdb001&#39;;</span></code></pre></div></li>
+<li><p>Configuração do <code>ARCHIVELOG DELETION POLICY</code> - sem uso
+de catálogo:</p>
+<div class="sourceCode" id="cb41"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb41-1"><a href="#cb41-1"></a>CONFIGURE ARCHIVELOG DELETION POLICY TO BACKED UP 1 TIMES TO DEVICE TYPE DISK;</span></code></pre></div></li>
+</ul></li>
+</ul>
+<h1 data-number="4" id="operações-de-rotina"><span class="header-section-number">4</span> Operações de Rotina</h1>
+<h2 data-number="4.1" id="validar-se-o-broker-está-sendo-usado"><span class="header-section-number">4.1</span> Validar se o Broker está sendo
+usado</h2>
+<p>No SQL*Plus</p>
+<div class="sourceCode" id="cb42"><pre class="sourceCode numberSource sql numberLines"><code class="sourceCode sql"><span id="cb42-1"><a href="#cb42-1"></a>show parameter dg_broker_start</span></code></pre></div>
+<p>Resultado esperado:</p>
+<div class="sourceCode" id="cb43"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb43-1"><a href="#cb43-1"></a>SQL&gt; show parameter dg_broker_start</span>
+<span id="cb43-2"><a href="#cb43-2"></a></span>
+<span id="cb43-3"><a href="#cb43-3"></a>NAME                                 TYPE        VALUE</span>
+<span id="cb43-4"><a href="#cb43-4"></a>------------------------------------ ----------- ------------------------------</span>
+<span id="cb43-5"><a href="#cb43-5"></a>dg_broker_start                      boolean     TRUE</span>
+<span id="cb43-6"><a href="#cb43-6"></a>SQL&gt;</span></code></pre></div>
+<h2 data-number="4.2" id="abrir-o-dgmgrl"><span class="header-section-number">4.2</span> Abrir o DGMGRL</h2>
+<p>Abrir o DGMGRL (conectar via TNS ou /):</p>
+<div class="sourceCode" id="cb44"><pre class="sourceCode numberSource bash numberLines"><code class="sourceCode bash"><span id="cb44-1"><a href="#cb44-1"></a><span class="ex">dgmgrl</span> sys@cdb001</span></code></pre></div>
+<h2 data-number="4.3" id="validação-básica"><span class="header-section-number">4.3</span> Validação Básica</h2>
+<p>Validar configuração:</p>
+<div class="sourceCode" id="cb45"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb45-1"><a href="#cb45-1"></a>show configuration</span></code></pre></div>
+<p>Resultado esperado:</p>
+<div class="sourceCode" id="cb46"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb46-1"><a href="#cb46-1"></a>DGMGRL&gt; show configuration</span>
+<span id="cb46-2"><a href="#cb46-2"></a></span>
+<span id="cb46-3"><a href="#cb46-3"></a>Configuration - cdb001-standby</span>
+<span id="cb46-4"><a href="#cb46-4"></a></span>
+<span id="cb46-5"><a href="#cb46-5"></a>  Protection Mode: MaxPerformance</span>
+<span id="cb46-6"><a href="#cb46-6"></a>  Members:</span>
+<span id="cb46-7"><a href="#cb46-7"></a>  cdb001    - Primary database</span>
+<span id="cb46-8"><a href="#cb46-8"></a>    cdb001_dg - Physical standby database</span>
+<span id="cb46-9"><a href="#cb46-9"></a></span>
+<span id="cb46-10"><a href="#cb46-10"></a>Fast-Start Failover:  Disabled</span>
+<span id="cb46-11"><a href="#cb46-11"></a></span>
+<span id="cb46-12"><a href="#cb46-12"></a>Configuration Status:</span>
+<span id="cb46-13"><a href="#cb46-13"></a>SUCCESS   (status updated 52 seconds ago)</span>
+<span id="cb46-14"><a href="#cb46-14"></a></span>
+<span id="cb46-15"><a href="#cb46-15"></a>DGMGRL&gt;</span></code></pre></div>
+<p>Validar primary:</p>
+<div class="sourceCode" id="cb47"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb47-1"><a href="#cb47-1"></a>show database cdb001</span></code></pre></div>
+<p>Resultado esperado:</p>
+<div class="sourceCode" id="cb48"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb48-1"><a href="#cb48-1"></a>DGMGRL&gt; show database cdb001</span>
+<span id="cb48-2"><a href="#cb48-2"></a></span>
+<span id="cb48-3"><a href="#cb48-3"></a>Database - cdb001</span>
+<span id="cb48-4"><a href="#cb48-4"></a></span>
+<span id="cb48-5"><a href="#cb48-5"></a>  Role:               PRIMARY</span>
+<span id="cb48-6"><a href="#cb48-6"></a>  Intended State:     TRANSPORT-ON</span>
+<span id="cb48-7"><a href="#cb48-7"></a>  Instance(s):</span>
+<span id="cb48-8"><a href="#cb48-8"></a>    cdb001</span>
+<span id="cb48-9"><a href="#cb48-9"></a></span>
+<span id="cb48-10"><a href="#cb48-10"></a>Database Status:</span>
+<span id="cb48-11"><a href="#cb48-11"></a>SUCCESS</span>
+<span id="cb48-12"><a href="#cb48-12"></a></span>
+<span id="cb48-13"><a href="#cb48-13"></a>DGMGRL&gt;</span></code></pre></div>
+<p>Validar standby:</p>
+<div class="sourceCode" id="cb49"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb49-1"><a href="#cb49-1"></a>show database cdb001_dg</span></code></pre></div>
+<p>Resultado esperado:</p>
+<div class="sourceCode" id="cb50"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb50-1"><a href="#cb50-1"></a>DGMGRL&gt; show database cdb001_dg</span>
+<span id="cb50-2"><a href="#cb50-2"></a></span>
+<span id="cb50-3"><a href="#cb50-3"></a>Database - cdb001_dg</span>
+<span id="cb50-4"><a href="#cb50-4"></a></span>
+<span id="cb50-5"><a href="#cb50-5"></a>  Role:               PHYSICAL STANDBY</span>
+<span id="cb50-6"><a href="#cb50-6"></a>  Intended State:     APPLY-ON</span>
+<span id="cb50-7"><a href="#cb50-7"></a>  Transport Lag:      0 seconds (computed 1 second ago)</span>
+<span id="cb50-8"><a href="#cb50-8"></a>  Apply Lag:          0 seconds (computed 1 second ago)</span>
+<span id="cb50-9"><a href="#cb50-9"></a>  Average Apply Rate: 2.00 KByte/s</span>
+<span id="cb50-10"><a href="#cb50-10"></a>  Real Time Query:    OFF</span>
+<span id="cb50-11"><a href="#cb50-11"></a>  Instance(s):</span>
+<span id="cb50-12"><a href="#cb50-12"></a>    cdb001_dg</span>
+<span id="cb50-13"><a href="#cb50-13"></a></span>
+<span id="cb50-14"><a href="#cb50-14"></a>Database Status:</span>
+<span id="cb50-15"><a href="#cb50-15"></a>SUCCESS</span>
+<span id="cb50-16"><a href="#cb50-16"></a></span>
+<span id="cb50-17"><a href="#cb50-17"></a>DGMGRL&gt;</span></code></pre></div>
+<h2 data-number="4.4" id="interromper-redo-apply"><span class="header-section-number">4.4</span> Interromper Redo Apply</h2>
+<p>Interromper Redo Apply:</p>
+<div class="sourceCode" id="cb51"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb51-1"><a href="#cb51-1"></a>edit database cdb001_dg set state=&#39;APPLY-OFF&#39;;</span></code></pre></div>
+<h2 data-number="4.5" id="reiniciar-redo-apply"><span class="header-section-number">4.5</span> Reiniciar Redo Apply</h2>
+<p>Reiniciar Redo Apply:</p>
+<div class="sourceCode" id="cb52"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb52-1"><a href="#cb52-1"></a>edit database cdb001_dg set state=&#39;APPLY-ON&#39;;</span></code></pre></div>
+<h2 data-number="4.6" id="interromper-envio-de-archives"><span class="header-section-number">4.6</span> Interromper Envio de
+Archives</h2>
+<p>Interromper Envio de Archives:</p>
+<div class="sourceCode" id="cb53"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb53-1"><a href="#cb53-1"></a>edit database cdb001 set state=&#39;TRANSPORT-OFF&#39;;</span></code></pre></div>
+<h2 data-number="4.7" id="reiniciar-envio-de-archives"><span class="header-section-number">4.7</span> Reiniciar Envio de
+Archives</h2>
+<p>Reiniciar Envio de Archives:</p>
+<div class="sourceCode" id="cb54"><pre class="sourceCode numberSource default numberLines"><code class="sourceCode default"><span id="cb54-1"><a href="#cb54-1"></a>edit database cdb001 set state=&#39;TRANSPORT-ON&#39;;</span></code></pre></div>
+<h1 class="unnumbered" id="referências">Referências</h1>
+<ul>
+<li><a href="https://docs.oracle.com/en/database/oracle/oracle-database/19/dgbkr/index.html">Data
+Guard Broker - 19c</a></li>
+<li><a href="https://oracle-base.com/articles/19c/data-guard-setup-using-broker-19c">ORACLE-BASE
+- Data Guard Physical Standby Setup Using the Data Guard Broker in
+Oracle Database 19c</a></li>
+<li><a href="https://oracle-dba-help.blogspot.com/2018/10/RMAN-08591-backup-failure-standby-database-backup.html">RMAN-08591:
+WARNING: invalid archived log deletion policy</a></li>
+</ul>
+</body>
+</html>
