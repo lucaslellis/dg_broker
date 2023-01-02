@@ -330,6 +330,7 @@ run {
         set audit_file_dest='/u01/app/oracle/admin/cdb001_dg/adump'
         set job_queue_processes='0'
         set control_files='/u02/oradata/CDB001_DG/control01.ctl','/u03/fast_recovery_area/CDB001_DG/control02.ctl'
+        set local_listener=''
       nofilenamecheck;
 }
 ```
