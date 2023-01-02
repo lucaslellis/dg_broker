@@ -280,7 +280,7 @@ EOF
 #### Criar diretórios
 
 ```{.bash .numberLines}
-mkdir -p /u02/oradata /u03/fast_recovery_area /u01/app/oracle/admin/cdb001_dg/adump
+mkdir -p /u02/oradata/CDB001_DG /u03/fast_recovery_area/CDB001_DG /u01/app/oracle/admin/cdb001_dg/adump
 ```
 
 #### Copiar password file da primary
@@ -329,6 +329,7 @@ run {
         set db_unique_name='cdb001_dg'
         set audit_file_dest='/u01/app/oracle/admin/cdb001_dg/adump'
         set job_queue_processes='0'
+        set control_files='/u02/oradata/CDB001_DG/control01.ctl','/u03/fast_recovery_area/CDB001_DG/control02.ctl'
       nofilenamecheck;
 }
 ```
@@ -678,6 +679,64 @@ de limpeza manual ou via crontab.
     ```{.default .numberLines}
     CONFIGURE ARCHIVELOG DELETION POLICY TO BACKED UP 1 TIMES TO DEVICE TYPE DISK;
     ```
+
+### Cascaded Standby - RedoRoutes
+
+A partir da versão 12c, é possível configurar o Redo Transport em cascata caso se tenha dois ou mais Standbys.
+
+Dada a configuração abaixo:
+
+```{.default .numberLines}
+DGMGRL> show configuration
+
+Configuration - cdb001-standby
+
+  Protection Mode: MaxPerformance
+  Members:
+  cdb001     - Primary database
+    cdb001_dg  - Physical standby database
+    cdb001_dg2 - Physical standby database
+```
+
+Na configuração padrão, o Redo Transport é feito a partir da base cdb001 para as bases cdb001_dg e cdb001_dg2. Com o
+parâmetro `RedoRoutes`, podemos alterar o Redo Transport para ser feito da seguinte maneira:
+
+```{.default}
+CDB001 ---> CDB001_DG ---> CDB001_DG2
+```
+
+Para estabelecer essa configuração, devemos alterar o parâmetro `RedoRoutes` da seguinte maneira:
+
+```{.default .numberLines}
+edit database cdb001 set property redoroutes='(LOCAL : cdb001_dg ASYNC)';
+
+edit database cdb001_dg set property redoroutes='(LOCAL : cdb001 ASYNC, cdb001_dg2 ASYNC)(cdb001 : cdb001_dg2 ASYNC)(cdb001_dg2 : cdb001 ASYNC)';
+
+edit database cdb001_dg2 set property redoroutes='(LOCAL : cdb001_dg ASYNC)';
+```
+
+Resultado:
+
+```{.default .numberLines}
+DGMGRL> show configuration;
+
+Configuration - cdb001-standby
+
+  Protection Mode: MaxPerformance
+  Members:
+  cdb001     - Primary database
+    cdb001_dg  - Physical standby database
+      cdb001_dg2 - Physical standby database (receiving current redo)
+
+Fast-Start Failover:  Disabled
+
+Configuration Status:
+SUCCESS   (status updated 31 seconds ago)
+
+DGMGRL>
+```
+
+Para exemplos mais complexos, ver o documento [Best Practices for Configuring Redo Transport for Data Guard and Active Data Guard 12c](https://www.oracle.com/technetwork/database/availability/broker-12c-transport-config-2082184.pdf).
 
 ## Operações de Rotina
 
@@ -1477,3 +1536,4 @@ DGMGRL>
 * [Known issues when using "Validate database" DGMGRL command (Doc ID 2300040.1)](https://support.oracle.com/epmos/faces/DocContentDisplay?id=2300040.1)
 * [Step by Step Guide on How To Reinstate Failed Primary Database into Physical Standby (Doc ID 738642.1)](https://support.oracle.com/epmos/faces/DocContentDisplay?id=738642.1)
 * [Reinstating a Physical Standby Using Backups Instead of Flashback (Doc ID 416310.1)](https://support.oracle.com/epmos/faces/DocContentDisplay?id=416310.1)
+* [Best Practices for Configuring Redo Transport for Data Guard and Active Data Guard 12c](https://www.oracle.com/technetwork/database/availability/broker-12c-transport-config-2082184.pdf)
