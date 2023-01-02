@@ -4,11 +4,13 @@ lang: pt-BR
 
 title: Data Guard Broker - Configuração e Operações de Rotina
 author: Lucas Pimentel Lellis
+toc-title: Sumário
+***REMOVED***
 ---
 
 # Data Guard Broker - Configuração e Operações de Rotina
 
-## Ambiente
+## Ambiente de Exemplo
 
 | Informação     | Primary  | Standby   |
 |----------------|----------|-----------|
@@ -62,14 +64,14 @@ EOF
 
 Verifique que os serviços estáticos estão disponíveis:
 
-```{.bash .numberLines}
+```{.default .numberLines}
 [oracle@linux01 cdb001 ~]$ lsnrctl status
 
 LSNRCTL for Linux: Version 19.0.0.0.0 - Production on 30-DEC-2022 21:00:17
 
 Copyright (c) 1991, 2022, Oracle.  All rights reserved.
 
-Connecting to (DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=linux01.gcp.goldopet.win)(PORT=1521)))
+Connecting to (DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=linux01)(PORT=1521)))
 STATUS of the LISTENER
 ------------------------
 Alias                     listener
@@ -82,7 +84,7 @@ SNMP                      OFF
 Listener Parameter File   /u01/app/oracle/product/19.0.0/db_1/network/admin/listener.ora
 Listener Log File         /u01/app/oracle/diag/tnslsnr/linux01/listener/alert/log.xml
 Listening Endpoints Summary...
-  (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=linux01.gcp.goldopet.win)(PORT=1521)))
+  (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=linux01)(PORT=1521)))
   (DESCRIPTION=(ADDRESS=(PROTOCOL=ipc)(KEY=EXTPROC1521)))
 Services Summary...
 Service "cdb001.world" has 2 instance(s).
@@ -121,7 +123,7 @@ Incluir no arquivo `$ORACLE_HOME/network/admin/tnsnames.ora`:
 ```{.default .numberLines}
 CDB001 =
   (DESCRIPTION =
-    (ADDRESS = (PROTOCOL = TCP)(HOST = linux01.gcp.goldopet.win)(PORT = 1521))
+    (ADDRESS = (PROTOCOL = TCP)(HOST = linux01)(PORT = 1521))
     (CONNECT_DATA =
       (SERVER = DEDICATED)
       (SERVICE_NAME = cdb001.world)
@@ -130,7 +132,7 @@ CDB001 =
 
 CDB001_dg =
   (DESCRIPTION =
-    (ADDRESS = (PROTOCOL = TCP)(HOST = linux02.gcp.goldopet.win)(PORT = 1521))
+    (ADDRESS = (PROTOCOL = TCP)(HOST = linux02)(PORT = 1521))
     (CONNECT_DATA =
       (SERVER = DEDICATED)
       (SERVICE_NAME = cdb001_dg.world)
@@ -138,7 +140,10 @@ CDB001_dg =
   )
 ```
 
-#### Criar standby redo logs - Número de redo log groups + 1
+#### Criar standby redo logs
+
+Os Standby Redo Logs (SRLs) devem ser criados na quantidade "Número de redo log groups + 1" para cada thread e com
+tamanho igual ou superior ao maior logfile de cada thread.
 
 ```{.sql .numberLines}
 alter database add standby logfile thread 1 group 7 size 200m;
@@ -199,14 +204,14 @@ lsnrctl stop LISTENER && lsnrctl start LISTENER
 
 Verifique que os serviços estáticos estão disponíveis:
 
-```{.bash .numberLines}
+```{.default .numberLines}
 [oracle@linux02 cdb002 admin]$ lsnrctl status
 
 LSNRCTL for Linux: Version 19.0.0.0.0 - Production on 30-DEC-2022 21:13:33
 
 Copyright (c) 1991, 2022, Oracle.  All rights reserved.
 
-Connecting to (DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=linux02.gcp.goldopet.win)(PORT=1521)))
+Connecting to (DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=linux02)(PORT=1521)))
 STATUS of the LISTENER
 ------------------------
 Alias                     LISTENER
@@ -219,7 +224,7 @@ SNMP                      OFF
 Listener Parameter File   /u01/app/oracle/product/19.0.0/db_1/network/admin/listener.ora
 Listener Log File         /u01/app/oracle/diag/tnslsnr/linux02/listener/alert/log.xml
 Listening Endpoints Summary...
-  (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=linux02.gcp.goldopet.win)(PORT=1521)))
+  (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=linux02)(PORT=1521)))
   (DESCRIPTION=(ADDRESS=(PROTOCOL=ipc)(KEY=EXTPROC1521)))
 Services Summary...
 Service "cdb001_dg.world" has 1 instance(s).
@@ -237,7 +242,7 @@ Incluir no arquivo `$ORACLE_HOME/network/admin/tnsnames.ora`:
 ```{.default .numberLines}
 CDB001 =
   (DESCRIPTION =
-    (ADDRESS = (PROTOCOL = TCP)(HOST = linux01.gcp.goldopet.win)(PORT = 1521))
+    (ADDRESS = (PROTOCOL = TCP)(HOST = linux01)(PORT = 1521))
     (CONNECT_DATA =
       (SERVER = DEDICATED)
       (SERVICE_NAME = cdb001.world)
@@ -246,7 +251,7 @@ CDB001 =
 
 CDB001_dg =
   (DESCRIPTION =
-    (ADDRESS = (PROTOCOL = TCP)(HOST = linux02.gcp.goldopet.win)(PORT = 1521))
+    (ADDRESS = (PROTOCOL = TCP)(HOST = linux02)(PORT = 1521))
     (CONNECT_DATA =
       (SERVER = DEDICATED)
       (SERVICE_NAME = cdb001_dg.world)
@@ -515,7 +520,7 @@ Database - cdb001
     SendQEntries                    = '(monitor)'
     RecvQEntries                    = '(monitor)'
     HostName                        = 'linux01'
-    StaticConnectIdentifier         = '(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=linux01.gcp.goldopet.win)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=cdb001_DGMGRL.world)(INSTANCE_NAME=cdb001)(SERVER=DEDICATED)))'
+    StaticConnectIdentifier         = '(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=linux01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=cdb001_DGMGRL.world)(INSTANCE_NAME=cdb001)(SERVER=DEDICATED)))'
     TopWaitEvents                   = '(monitor)'
     SidName                         = '(monitor)'
 
@@ -821,19 +826,647 @@ O arquivo sempre será gerado na mesma pasta do `alert_<INSTANCE>.log`.
 IMPORT CONFIGURATION FROM 'backup_config_cdb001.txt';
 ```
 
-O arquivo sdeverá estar na mesma pasta do `alert_<INSTANCE>.log`.
+O arquivo deverá estar na mesma pasta do `alert_<INSTANCE>.log`.
 
 ## Role Transitions
 
+### Observações
+
+* Sempre conecte via TNS para executar uma operação de Role Transition
+
+* Antes de executar uma operação de Role Transition, faça um [backup da configuração](#backup-da-configuração).
+
+### Validação
+
+Valide as bases primary e standby. Exemplo:
+
+```{.default .numberLines}
+[oracle@linux01 cdb001 ~]$ dgmgrl sys@cdb001
+DGMGRL for Linux: Release 19.0.0.0.0 - Production on Sat Dec 31 02:28:28 2022
+Version 19.15.0.0.0
+
+Copyright (c) 1982, 2019, Oracle and/or its affiliates.  All rights reserved.
+
+Welcome to DGMGRL, type "help" for information.
+Password:
+Connected to "cdb001"
+Connected as SYSDBA.
+DGMGRL> show configuration
+
+Configuration - cdb001-standby
+
+  Protection Mode: MaxPerformance
+  Members:
+  cdb001    - Primary database
+    cdb001_dg - Physical standby database
+
+Fast-Start Failover:  Disabled
+
+Configuration Status:
+SUCCESS   (status updated 41 seconds ago)
+
+DGMGRL> validate database verbose cdb001          <<< PRIMARY
+
+  Database Role:    Primary database
+
+  Ready for Switchover:  Yes
+
+  Flashback Database Status:
+    cdb001:  On
+
+  Capacity Information:
+    Database  Instances        Threads
+    cdb001    1                1
+
+  Managed by Clusterware:
+    cdb001:  NO
+    Validating static connect identifier for the primary database cdb001...
+    The static connect identifier allows for a connection to database "cdb001".
+
+  Temporary Tablespace File Information:
+    cdb001 TEMP Files:  5
+
+  Data file Online Move in Progress:
+    cdb001:  No
+
+  Transport-Related Information:
+    Transport On:  Yes
+
+  Log Files Cleared:
+    cdb001 Standby Redo Log Files:  Cleared
+
+DGMGRL> validate database verbose cdb001_dg          <<< STANDBY
+
+  Database Role:     Physical standby database
+  Primary Database:  cdb001
+
+  Ready for Switchover:  Yes
+  Ready for Failover:    Yes (Primary Running)
+
+  Flashback Database Status:
+    cdb001   :  On
+    cdb001_dg:  Off
+
+  Capacity Information:
+    Database   Instances        Threads
+    cdb001     1                1
+    cdb001_dg  1                1
+
+  Managed by Clusterware:
+    cdb001   :  NO
+    cdb001_dg:  NO
+    Validating static connect identifier for the primary database cdb001...
+    The static connect identifier allows for a connection to database "cdb001".
+
+  Temporary Tablespace File Information:
+    cdb001 TEMP Files:     5
+    cdb001_dg TEMP Files:  5
+
+  Data file Online Move in Progress:
+    cdb001:     No
+    cdb001_dg:  No
+
+  Standby Apply-Related Information:
+    Apply State:      Running
+    Apply Lag:        0 seconds (computed 0 seconds ago)
+    Apply Delay:      0 minutes
+
+  Transport-Related Information:
+    Transport On:  Yes
+    Gap Status:    No Gap
+    Transport Lag:  0 seconds (computed 0 seconds ago)
+    Transport Status:  Success
+
+  Log Files Cleared:
+    cdb001 Standby Redo Log Files:     Cleared
+    cdb001_dg Online Redo Log Files:   Cleared
+    cdb001_dg Standby Redo Log Files:  Available
+
+  Current Log File Groups Configuration:
+    Thread #  Online Redo Log Groups  Standby Redo Log Groups Status
+              (cdb001)                (cdb001_dg)
+    1         6                       7                       Sufficient SRLs
+
+  Future Log File Groups Configuration:
+    Thread #  Online Redo Log Groups  Standby Redo Log Groups Status
+              (cdb001_dg)             (cdb001)
+    1         6                       7                       Sufficient SRLs
+
+  Current Configuration Log File Sizes:
+    Thread #   Smallest Online Redo      Smallest Standby Redo
+               Log File Size             Log File Size
+               (cdb001)                  (cdb001_dg)
+    1          200 MBytes                200 MBytes
+
+  Future Configuration Log File Sizes:
+    Thread #   Smallest Online Redo      Smallest Standby Redo
+               Log File Size             Log File Size
+               (cdb001_dg)               (cdb001)
+    1          200 MBytes                200 MBytes
+
+  Apply-Related Property Settings:
+    Property                        cdb001 Value             cdb001_dg Value
+    DelayMins                       0                        0
+    ApplyParallel                   AUTO                     AUTO
+    ApplyInstances                  0                        0
+
+  Transport-Related Property Settings:
+    Property                        cdb001 Value             cdb001_dg Value
+    LogShipping                     ON                       ON
+    LogXptMode                      ASYNC                    ASYNC
+    Dependency                      <empty>                  <empty>
+    DelayMins                       0                        0
+    Binding                         Mandatory                Mandatory
+    MaxFailure                      0                        0
+    ReopenSecs                      300                      300
+    NetTimeout                      30                       30
+    RedoCompression                 DISABLE                  DISABLE
+
+DGMGRL>
+```
+
+Valide as configurações de rede:
+
+```{.default .numberLines}
+DGMGRL> VALIDATE NETWORK CONFIGURATION FOR ALL;
+Connecting to instance "cdb001" on database "cdb001" ...
+Connected to "cdb001"
+Checking connectivity from instance "cdb001" on database "cdb001 to instance "cdb001_dg" on database "cdb001_dg"...
+Succeeded.
+Connecting to instance "cdb001_dg" on database "cdb001_dg" ...
+Connected to "cdb001_dg"
+Checking connectivity from instance "cdb001_dg" on database "cdb001_dg to instance "cdb001" on database "cdb001"...
+Succeeded.
+
+Oracle Clusterware is not configured on database "cdb001".
+Connecting to database "cdb001" using static connect identifier "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=linux01)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=cdb001_DGMGRL.world)(INSTANCE_NAME=cdb001)(SERVER=DEDICATED)(STATIC_SERVICE=TRUE)))" ...
+Succeeded.
+The static connect identifier allows for a connection to database "cdb001".
+
+Oracle Clusterware is not configured on database "cdb001_dg".
+Connecting to database "cdb001_dg" using static connect identifier "(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=linux02)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=cdb001_dg_DGMGRL.world)(INSTANCE_NAME=cdb001_dg)(SERVER=DEDICATED)(STATIC_SERVICE=TRUE)))" ...
+Succeeded.
+The static connect identifier allows for a connection to database "cdb001_dg".
+
+DGMGRL>
+```
+
 ### Switchover
+
+Operação que transforma a base Primary em Physical Standby e a base Physical Standby em Primary. Não há perda de dados.
+
+Sintaxe:
+
+```{.default .numberLines}
+switchover to <physical standby>;
+```
+
+Exemplo:
+
+```{.default .numberLines}
+DGMGRL> switchover to cdb001_dg;
+Performing switchover NOW, please wait...
+Operation requires a connection to database "cdb001_dg"
+Connecting ...
+Connected to "cdb001_dg"
+Connected as SYSDBA.
+New primary database "cdb001_dg" is opening...
+Operation requires start up of instance "cdb001" on database "cdb001"
+Starting instance "cdb001"...
+Connected to an idle instance.
+ORACLE instance started.
+Connected to "cdb001"
+Database mounted.
+Database opened.
+Connected to "cdb001"
+Switchover succeeded, new primary is "cdb001_dg"
+DGMGRL> show configuration
+
+Configuration - cdb001-standby
+
+  Protection Mode: MaxPerformance
+  Members:
+  cdb001_dg - Primary database
+    cdb001    - Physical standby database
+
+Fast-Start Failover:  Disabled
+
+Configuration Status:
+SUCCESS   (status updated 52 seconds ago)
+
+DGMGRL> show database cdb001
+
+Database - cdb001
+
+  Role:               PHYSICAL STANDBY
+  Intended State:     APPLY-ON
+  Transport Lag:      0 seconds (computed 0 seconds ago)
+  Apply Lag:          0 seconds (computed 1 second ago)
+  Average Apply Rate: 9.00 KByte/s
+  Real Time Query:    ON
+  Instance(s):
+    cdb001
+
+Database Status:
+SUCCESS
+
+DGMGRL> show database cdb001_dg
+
+Database - cdb001_dg
+
+  Role:               PRIMARY
+  Intended State:     TRANSPORT-ON
+  Instance(s):
+    cdb001_dg
+
+Database Status:
+SUCCESS
+
+DGMGRL>
+```
 
 ### Failover
 
+Operação que converte a base Standby para Primary. Como pode causar perda de dados, só deve ser usada quando a base
+Primary estiver inutilizada e a recuperação não puder ser feita em tempo hábil.
+
+Sintaxes possíveis:
+
+* Aplicando o máximo de Redo possível para minimizar a perda de dados:
+
+  ```{.default .numberLines}
+  failover to <standby>;
+  ```
+
+* Iniciando o failover imediatamente:
+
+  ```{.default .numberLines}
+  failover to <standby> immediate;
+  ```
+
+Exemplo:
+
+```{.default .numberLines}
+[oracle@linux02 cdb001_dg ~]$ dgmgrl sys@cdb001_dg
+DGMGRL for Linux: Release 19.0.0.0.0 - Production on Sat Dec 31 02:48:32 2022
+Version 19.15.0.0.0
+
+Copyright (c) 1982, 2019, Oracle and/or its affiliates.  All rights reserved.
+
+Welcome to DGMGRL, type "help" for information.
+Password:
+Connected to "cdb001_dg"
+Connected as SYSDBA.
+DGMGRL> show configuration;
+
+Configuration - cdb001-standby
+
+  Protection Mode: MaxPerformance
+  Members:
+  cdb001    - Primary database
+    cdb001_dg - Physical standby database
+
+Fast-Start Failover:  Disabled
+
+Configuration Status:
+SUCCESS   (status updated 46 seconds ago)
+
+DGMGRL> failover to cdb001_dg;
+Performing failover NOW, please wait...
+Failover succeeded, new primary is "cdb001_dg"
+DGMGRL> show configuration;
+
+Configuration - cdb001-standby
+
+  Protection Mode: MaxPerformance
+  Members:
+  cdb001_dg - Primary database
+    cdb001    - Physical standby database (disabled)
+      ORA-16661: the standby database needs to be reinstated
+
+Fast-Start Failover:  Disabled
+
+Configuration Status:
+SUCCESS   (status updated 2 seconds ago)
+
+DGMGRL>
+```
+
 ### Reinstate
+
+Operação que converte para Physical Standby uma base Primary que sofreu failover. Para que possa ser feita de maneira
+automática pelo Broker, é necessário que o Flashback Database tenha sido ativado previamente na base Primary antes do
+Failover. Caso não tenha, será necessário um restore da base conforme descrito na nota
+[416310.1](https://support.oracle.com/epmos/faces/DocContentDisplay?id=416310.1) do MOS.
+
+Sintaxe:
+
+```{.default .numberLines}
+reinstate database <db_unique_name>;
+```
+
+Exemplo:
+
+```{.default .numberLines}
+[oracle@linux02 cdb001_dg ~]$ dgmgrl sys@cdb001_dg
+DGMGRL for Linux: Release 19.0.0.0.0 - Production on Sat Dec 31 03:00:59 2022
+Version 19.15.0.0.0
+
+Copyright (c) 1982, 2019, Oracle and/or its affiliates.  All rights reserved.
+
+Welcome to DGMGRL, type "help" for information.
+Password:
+Connected to "CDB001_DG"
+Connected as SYSDBA.
+DGMGRL> show configuration;
+
+Configuration - cdb001-standby
+
+  Protection Mode: MaxPerformance
+  Members:
+  cdb001_dg - Primary database
+    cdb001    - Physical standby database (disabled)
+      ORA-16661: the standby database needs to be reinstated
+
+Fast-Start Failover:  Disabled
+
+Configuration Status:
+SUCCESS   (status updated 2 seconds ago)
+
+DGMGRL> reinstate database cdb001;
+Reinstating database "cdb001", please wait...
+Operation requires shut down of instance "cdb001" on database "cdb001"
+Shutting down instance "cdb001"...
+Connected to "cdb001"
+ORACLE instance shut down.
+Operation requires start up of instance "cdb001" on database "cdb001"
+Starting instance "cdb001"...
+Connected to an idle instance.
+ORACLE instance started.
+Connected to "cdb001"
+Database mounted.
+Connected to "cdb001"
+Continuing to reinstate database "cdb001" ...
+Reinstatement of database "cdb001" succeeded
+DGMGRL> show configuration;
+
+Configuration - cdb001-standby
+
+  Protection Mode: MaxPerformance
+  Members:
+  cdb001_dg - Primary database
+    cdb001    - Physical standby database
+      Warning: ORA-16809: multiple warnings detected for the member
+
+Fast-Start Failover:  Disabled
+
+Configuration Status:
+WARNING   (status updated 61 seconds ago)
+
+DGMGRL> show configuration;
+
+Configuration - cdb001-standby
+
+  Protection Mode: MaxPerformance
+  Members:
+  cdb001_dg - Primary database
+    cdb001    - Physical standby database
+
+Fast-Start Failover:  Disabled
+
+Configuration Status:
+SUCCESS   (status updated 34 seconds ago)
+
+DGMGRL> show database cdb001
+
+Database - cdb001
+
+  Role:               PHYSICAL STANDBY
+  Intended State:     APPLY-ON
+  Transport Lag:      0 seconds (computed 0 seconds ago)
+  Apply Lag:          0 seconds (computed 0 seconds ago)
+  Average Apply Rate: 55.00 KByte/s
+  Real Time Query:    ON
+  Instance(s):
+    cdb001
+
+Database Status:
+SUCCESS
+
+DGMGRL>
+```
+
+Após o reinstate ser finalizado com sucesso, é possível fazer um switchover para que as bases voltem aos seus status
+originais:
+
+```{.default .numberLines}
+DGMGRL> switchover to cdb001;
+Performing switchover NOW, please wait...
+Operation requires a connection to database "cdb001"
+Connecting ...
+Connected to "cdb001"
+Connected as SYSDBA.
+New primary database "cdb001" is opening...
+Operation requires start up of instance "cdb001_dg" on database "cdb001_dg"
+Starting instance "cdb001_dg"...
+Connected to an idle instance.
+ORACLE instance started.
+Connected to "cdb001_dg"
+Database mounted.
+Database opened.
+Connected to "cdb001_dg"
+Switchover succeeded, new primary is "cdb001"
+DGMGRL> show configuration;
+
+Configuration - cdb001-standby
+
+  Protection Mode: MaxPerformance
+  Members:
+  cdb001    - Primary database
+    cdb001_dg - Physical standby database
+      Error: ORA-16541: member is not enabled
+
+Fast-Start Failover:  Disabled
+
+Configuration Status:
+ERROR   (status updated 287 seconds ago)
+
+DGMGRL> /
+
+Configuration - cdb001-standby
+
+  Protection Mode: MaxPerformance
+  Members:
+  cdb001    - Primary database
+    cdb001_dg - Physical standby database
+      Error: ORA-16541: member is not enabled
+
+Fast-Start Failover:  Disabled
+
+Configuration Status:
+ERROR   (status updated 314 seconds ago)
+
+DGMGRL> show configuration;
+
+Configuration - cdb001-standby
+
+  Protection Mode: MaxPerformance
+  Members:
+  cdb001    - Primary database
+    cdb001_dg - Physical standby database
+
+Fast-Start Failover:  Disabled
+
+Configuration Status:
+SUCCESS   (status updated 47 seconds ago)
+
+DGMGRL> show database cdb001_dg;
+
+Database - cdb001_dg
+
+  Role:               PHYSICAL STANDBY
+  Intended State:     APPLY-ON
+  Transport Lag:      0 seconds (computed 0 seconds ago)
+  Apply Lag:          0 seconds (computed 0 seconds ago)
+  Average Apply Rate: 17.00 KByte/s
+  Real Time Query:    ON
+  Instance(s):
+    cdb001_dg
+
+Database Status:
+SUCCESS
+
+DGMGRL>
+```
 
 ### Convert to Snapshot Standby
 
+Operação que converte uma base Physical Standby para Snapshot Standby, de modo a possibilitar temporariamente
+operações de escrita e DDL (ex.: criação de índices para tuning de relatórios) na base Standby.
+
+Sintaxe:
+
+```{.default .numberLines}
+convert database <db_unique_name> to snapshot standby;
+```
+
+Exemplo:
+
+```{.default .numberLines}
+[oracle@linux01 cdb001 trace]$ dgmgrl sys@cdb001
+DGMGRL for Linux: Release 19.0.0.0.0 - Production on Sat Dec 31 03:12:35 2022
+Version 19.15.0.0.0
+
+Copyright (c) 1982, 2019, Oracle and/or its affiliates.  All rights reserved.
+
+Welcome to DGMGRL, type "help" for information.
+Password:
+Connected to "cdb001"
+Connected as SYSDBA.
+DGMGRL> show configuration;
+
+Configuration - cdb001-standby
+
+  Protection Mode: MaxPerformance
+  Members:
+  cdb001    - Primary database
+    cdb001_dg - Physical standby database
+
+Fast-Start Failover:  Disabled
+
+Configuration Status:
+SUCCESS   (status updated 42 seconds ago)
+
+DGMGRL> convert database cdb001_dg to snapshot standby;
+Converting database "cdb001_dg" to a Snapshot Standby database, please wait...
+Database "cdb001_dg" converted successfully
+DGMGRL> show configuration;
+
+Configuration - cdb001-standby
+
+  Protection Mode: MaxPerformance
+  Members:
+  cdb001    - Primary database
+    cdb001_dg - Snapshot standby database
+
+Fast-Start Failover:  Disabled
+
+Configuration Status:
+SUCCESS   (status updated 42 seconds ago)
+
+DGMGRL>
+```
+
 ### Convert to Physical Standby
+
+Operação que converte uma base Snapshot Standby de volta para Physical Standby:
+
+Sintaxe:
+
+```{.default .numberLines}
+convert database <db_unique_name> to physical standby;
+```
+
+Exemplo:
+
+```{.default .numberLines}
+[oracle@linux01 cdb001 trace]$ dgmgrl sys@cdb001
+DGMGRL for Linux: Release 19.0.0.0.0 - Production on Sat Dec 31 03:16:07 2022
+Version 19.15.0.0.0
+
+Copyright (c) 1982, 2019, Oracle and/or its affiliates.  All rights reserved.
+
+Welcome to DGMGRL, type "help" for information.
+Password:
+Connected to "cdb001"
+Connected as SYSDBA.
+DGMGRL> show configuration;
+
+Configuration - cdb001-standby
+
+  Protection Mode: MaxPerformance
+  Members:
+  cdb001    - Primary database
+    cdb001_dg - Snapshot standby database
+
+Fast-Start Failover:  Disabled
+
+Configuration Status:
+SUCCESS   (status updated 51 seconds ago)
+
+DGMGRL> convert database cdb001_dg to physical standby;
+Converting database "cdb001_dg" to a Physical Standby database, please wait...
+Operation requires shut down of instance "cdb001_dg" on database "cdb001_dg"
+Shutting down instance "cdb001_dg"...
+Connected to "cdb001_dg"
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+Operation requires start up of instance "cdb001_dg" on database "cdb001_dg"
+Starting instance "cdb001_dg"...
+Connected to an idle instance.
+ORACLE instance started.
+Connected to "cdb001_dg"
+Database mounted.
+Connected to "cdb001_dg"
+Continuing to convert database "cdb001_dg" ...
+Database "cdb001_dg" converted successfully
+DGMGRL> show configuration;
+
+Configuration - cdb001-standby
+
+  Protection Mode: MaxPerformance
+  Members:
+  cdb001    - Primary database
+    cdb001_dg - Physical standby database
+
+Fast-Start Failover:  Disabled
+
+Configuration Status:
+SUCCESS   (status updated 40 seconds ago)
+
+DGMGRL>
+```
 
 ## Referências { - }
 
@@ -842,3 +1475,5 @@ O arquivo sdeverá estar na mesma pasta do `alert_<INSTANCE>.log`.
 * [RMAN-08591: WARNING: invalid archived log deletion policy](https://oracle-dba-help.blogspot.com/2018/10/RMAN-08591-backup-failure-standby-database-backup.html)
 * [Insufficient SRLs reported by DGMGRL](https://christian-gohmann.de/2019/07/19/insufficient-srls-reported-by-dgmgrl/)
 * [Known issues when using "Validate database" DGMGRL command (Doc ID 2300040.1)](https://support.oracle.com/epmos/faces/DocContentDisplay?id=2300040.1)
+* [Step by Step Guide on How To Reinstate Failed Primary Database into Physical Standby (Doc ID 738642.1)](https://support.oracle.com/epmos/faces/DocContentDisplay?id=738642.1)
+* [Reinstating a Physical Standby Using Backups Instead of Flashback (Doc ID 416310.1)](https://support.oracle.com/epmos/faces/DocContentDisplay?id=416310.1)
