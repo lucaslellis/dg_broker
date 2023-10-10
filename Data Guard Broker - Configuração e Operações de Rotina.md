@@ -5,7 +5,6 @@ lang: pt-BR
 title: Data Guard Broker - Configuração e Operações de Rotina
 author: Lucas Pimentel Lellis
 toc-title: Sumário
-***REMOVED***
 ---
 
 # Data Guard Broker - Configuração e Operações de Rotina
