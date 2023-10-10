@@ -860,16 +860,28 @@ edit database cdb001_dg set state='APPLY-OFF';
 edit database cdb001_dg set state='APPLY-ON';
 ```
 
-### Interromper Envio de Archives
+### Interromper Envio de Archives - Todos os Destinos
 
 ```{.default .numberLines}
 edit database cdb001 set state='TRANSPORT-OFF';
 ```
 
-### Reiniciar Envio de Archives
+### Reiniciar Envio de Archives - Todos os Destinos
 
 ```{.default .numberLines}
 edit database cdb001 set state='TRANSPORT-ON';
+```
+
+### Interromper Envio de Archives - Destino Específico
+
+```{.default .numberLines}
+edit database cdb001_dg set property LogShipping='OFF';
+```
+
+### Reiniciar Envio de Archives - Destino Específico
+
+```{.default .numberLines}
+edit database cdb001_dg set property LogShipping='ON';
 ```
 
 ### Backup da configuração
