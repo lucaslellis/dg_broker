@@ -1519,7 +1519,7 @@ Connected to an idle instance.
 ORACLE instance started.
 Connected to "cdb001_dg"
 Database mounted.
-Connected to "cdb001_dg"
+Connected to "cdb001_dg"  
 Continuing to convert database "cdb001_dg" ...
 Database "cdb001_dg" converted successfully
 DGMGRL> show configuration;
@@ -1539,6 +1539,95 @@ SUCCESS   (status updated 40 seconds ago)
 DGMGRL>
 ```
 
+## Fast-Start Failover (FSFO)
+
+### Instale ou o Oracle Client ou o Database em Software-Only Mode
+
+Fora do escopo
+
+### Conecte com o dgmgrl na base primary
+
+```{.bash .numberLines}
+dgmgrl sys@cdb001
+```
+
+### Garanta que o StaticConnectIdentifier Esteja Configurado para Ambas as Bases
+
+```{.default .numberLines}
+show database cdb001 StaticConnectIdentifier
+
+show database cdb001_dg StaticConnectIdentifier
+```
+
+### Edite a Propriedade FastStartFailoverTarget
+
+```{.default .numberLines}
+edit database 'cdb001' set property 'FastStartFailoverTarget'='cdb001_dg';
+edit database 'cdb001_dg' set property 'FastStartFailoverTarget'='cdb001';
+```
+
+### Crie os Diretório para Abrigar o Arquivo de Configuração, o Log do Observer e a Wallet
+
+```{.bash .numberLines}
+mkdir /u01/app/oracle/observer
+mkdir /u01/app/oracle/wallet
+```
+
+### Crie a Wallet e Adicione as Senhas
+
+```{.bash .numberLines}
+orapki wallet create -wallet "/u01/app/oracle/wallet" -auto_login_local
+
+mkstore -wrl "/u01/app/oracle/wallet" -createCredential cdb001 sys <senha>
+
+mkstore -wrl "/u01/app/oracle/wallet" -createCredential cdb001_dg sys <senha>
+```
+
+### Inclua as Linhas Abaixo no sqlnet.ora para Utilizar a Wallet
+
+```{.default .numberLines}
+WALLET_LOCATION =
+   (SOURCE =
+     (METHOD = FILE)
+     (METHOD_DATA =
+       (DIRECTORY = /u01/app/oracle/wallet)
+     )
+   )
+
+SQLNET.WALLET_OVERRIDE = TRUE
+```
+
+### Habilite o FSFO em Observe-Only Mode
+
+```{.default .numberLines}
+enable fast_start failover observe only;
+```
+
+### Inicie o Observer
+
+```{.default .numberLines}
+START OBSERVER linux04 IN BACKGROUND FILE IS  /u01/app/oracle/product/19.0.0/db_1/observer/fsfo.dat LOGFILE IS /u01/app/oracle/product/19.0.0/db_1/observer/observer.log CONNECT IDENTIFIER IS cdb001;
+```
+
+### Valide a Configuração
+
+```{.default .numberLines}
+show fast_start failover;
+```
+
+### Teste a Configuração Derrubando a Base Primary e Monitorando o Log do Observer
+
+```{.bash .numberLines}
+tail -100f /u01/app/oracle/product/19.0.0/db_1/observer/observer.log
+```
+
+### Habilite a Configuração em Modo Definitivo
+
+```{.default .numberLines}
+disable fast_start failover;
+enable fast_start failover;
+```
+
 ## Referências { - }
 
 * [Data Guard Broker - 19c](https://docs.oracle.com/en/database/oracle/oracle-database/19/dgbkr/index.html)
@@ -1549,3 +1638,5 @@ DGMGRL>
 * [Step by Step Guide on How To Reinstate Failed Primary Database into Physical Standby (Doc ID 738642.1)](https://support.oracle.com/epmos/faces/DocContentDisplay?id=738642.1)
 * [Reinstating a Physical Standby Using Backups Instead of Flashback (Doc ID 416310.1)](https://support.oracle.com/epmos/faces/DocContentDisplay?id=416310.1)
 * [Best Practices for Configuring Redo Transport for Data Guard and Active Data Guard 12c](https://www.oracle.com/technetwork/database/availability/broker-12c-transport-config-2082184.pdf)
+* [Guide to Oracle Data Guard Fast-Start Failover](https://www.oracle.com/technical-resources/articles/smiley-fsfo.html)
+* [Data Guard Broker - Configure Fast Start Failover, Data Protection Levels and the Data Guard Observer (Doc ID 1508729.1)](https://support.oracle.com/epmos/faces/DocContentDisplay?id=1508729.1)
